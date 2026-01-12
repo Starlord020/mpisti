@@ -5,7 +5,7 @@ const io = require("socket.io")(http, {
     cors: { origin: "*" },
     pingInterval: 10000,
     pingTimeout: 5000,
-    maxHttpBufferSize: 1e8 // Kamera verisi için buffer artırıldı
+    maxHttpBufferSize: 1e8 // Kamera ve ses verisi için limit artırıldı
 });
 
 app.use(express.static("public"));
@@ -31,14 +31,24 @@ io.on("connection", (socket) => {
 
   // --- MEDYA İLETİMİ (SES & KAMERA) ---
   socket.on("streamData", (data) => {
-      // data: { roomId, type: 'audio'|'video', payload }
       let room = rooms[data.roomId];
       if (room && isPlayerInRoom(room, socket.id)) {
-          // Odaya yay (gönderen hariç)
+          // Veriyi odaya yay (gönderen hariç)
           socket.to(data.roomId).emit("streamData", {
               id: socket.id,
               type: data.type,
               payload: data.payload
+          });
+      }
+  });
+
+  // --- KONUŞMA SİNYALİ ---
+  socket.on("speaking", (data) => {
+      let room = rooms[data.roomId];
+      if (room) {
+          socket.to(data.roomId).emit("playerSpeaking", { 
+              id: socket.id, 
+              isSpeaking: data.isSpeaking 
           });
       }
   });
@@ -58,7 +68,6 @@ io.on("connection", (socket) => {
       };
       socket.join(roomId);
       rooms[roomId].seats[0] = { id: socket.id, name: data.username, isBot: false, hand: [] };
-      
       io.to(roomId).emit("updateRoom", rooms[roomId]);
       socket.emit("joined", { roomId: roomId, isAdmin: true, mySeat: 0 });
       broadcastRoomList();
@@ -81,12 +90,10 @@ io.on("connection", (socket) => {
       for(let i=0; i<4; i++) if(room.seats[i] && room.seats[i].id === socket.id) room.seats[i] = null;
       room.seats[seatIdx] = { id: socket.id, name: data.username, isBot: false, hand: [] };
       
-      if(room.admin === socket.id) {} 
-
       io.to(data.roomId).emit("updateRoom", room);
       socket.emit("joined", { roomId: data.roomId, isAdmin: (room.admin === socket.id), mySeat: seatIdx });
       broadcastRoomList();
-  });
+    });
 
   socket.on("startGame", (roomId) => {
     let room = rooms[roomId];
@@ -218,7 +225,6 @@ function calculateRoundEnd(room) {
         io.to(room.id).emit("matchOver", { scoreA: room.totalScoreA, scoreB: room.totalScoreB, winner });
         room.gameStarted = false;
     } else {
-        // SKOR TABLOSU İÇİN VERİ GÖNDERİYORUZ
         io.to(room.id).emit("roundOver", {
             scoreA: room.totalScoreA,
             scoreB: room.totalScoreB,
@@ -226,7 +232,7 @@ function calculateRoundEnd(room) {
             lastRoundA: sA,
             lastRoundB: sB
         });
-        setTimeout(() => startRound(room, false), 5000); // Tabloyu görmek için 5sn bekle
+        setTimeout(() => startRound(room, false), 5000);
     }
 }
 
