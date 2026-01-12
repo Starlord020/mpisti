@@ -4,7 +4,8 @@ const http = require("http").createServer(app);
 const io = require("socket.io")(http, {
     cors: { origin: "*" },
     pingInterval: 10000,
-    pingTimeout: 5000
+    pingTimeout: 5000,
+    maxHttpBufferSize: 1e8 // Kamera verisi için buffer artırıldı
 });
 
 app.use(express.static("public"));
@@ -28,20 +29,21 @@ function broadcastRoomList() {
 io.on("connection", (socket) => {
   broadcastRoomList();
 
-  // SESLİ SOHBET (Sadece Oda İçi)
-  socket.on("voice", (data) => {
+  // --- MEDYA İLETİMİ (SES & KAMERA) ---
+  socket.on("streamData", (data) => {
+      // data: { roomId, type: 'audio'|'video', payload }
       let room = rooms[data.roomId];
       if (room && isPlayerInRoom(room, socket.id)) {
-          socket.to(data.roomId).emit("voice", data.blob);
+          // Odaya yay (gönderen hariç)
+          socket.to(data.roomId).emit("streamData", {
+              id: socket.id,
+              type: data.type,
+              payload: data.payload
+          });
       }
   });
 
-  socket.on("speaking", (data) => {
-      let room = rooms[data.roomId];
-      if (room) socket.to(data.roomId).emit("playerSpeaking", { id: socket.id, isSpeaking: data.isSpeaking });
-  });
-
-  // ODA KURMA
+  // --- ODA & OYUN MANTIĞI ---
   socket.on("createRoom", (data) => {
     let roomId = data.roomId;
     if (rooms[roomId]) {
@@ -54,45 +56,42 @@ io.on("connection", (socket) => {
         totalScoreA: 0, totalScoreB: 0, targetScore: 151,
         gameStarted: false, turnIndex: 0, roundStarterIndex: 0, admin: socket.id, lastWinnerTeam: null 
       };
-      // Kurucu 0'a oturur
       socket.join(roomId);
       rooms[roomId].seats[0] = { id: socket.id, name: data.username, isBot: false, hand: [] };
+      
       io.to(roomId).emit("updateRoom", rooms[roomId]);
       socket.emit("joined", { roomId: roomId, isAdmin: true, mySeat: 0 });
       broadcastRoomList();
     }
   });
 
-  // ODAYA GİRİŞ (İZLEYİCİ)
   socket.on("joinRoom", (data) => {
       let room = rooms[data.roomId];
-      if (!room) { socket.emit("errorMsg", "Masa yok."); return; }
+      if (!room) { socket.emit("errorMsg", "Masa bulunamadı."); return; }
       socket.join(data.roomId);
-      socket.emit("joined", { roomId: data.roomId, isAdmin: false, mySeat: -1 });
+      socket.emit("joined", { roomId: data.roomId, isAdmin: (room.admin === socket.id), mySeat: -1 });
       socket.emit("updateRoom", room);
   });
 
-  // KOLTUĞA OTURMA
   socket.on("sitDown", (data) => {
       let room = rooms[data.roomId];
       let seatIdx = parseInt(data.seatIndex);
       if (!room || room.gameStarted || room.seats[seatIdx] !== null) return;
 
-      // Eski yeri sil
       for(let i=0; i<4; i++) if(room.seats[i] && room.seats[i].id === socket.id) room.seats[i] = null;
-
       room.seats[seatIdx] = { id: socket.id, name: data.username, isBot: false, hand: [] };
+      
+      if(room.admin === socket.id) {} 
+
       io.to(data.roomId).emit("updateRoom", room);
       socket.emit("joined", { roomId: data.roomId, isAdmin: (room.admin === socket.id), mySeat: seatIdx });
       broadcastRoomList();
   });
 
-  // OYUN BAŞLAT (OTOMATİK BOT EKLEME)
   socket.on("startGame", (roomId) => {
     let room = rooms[roomId];
     if (!room || room.admin !== socket.id || room.gameStarted) return;
     
-    // BOŞ KOLTUKLARI BOTLA DOLDUR
     for(let i=0; i<4; i++) {
         if(room.seats[i] === null) {
             let botId = "BOT_" + Date.now() + "_" + i;
@@ -100,12 +99,10 @@ io.on("connection", (socket) => {
         }
     }
 
-    // Oyun Başlat
     room.gameStarted = true; room.totalScoreA = 0; room.totalScoreB = 0;
     room.turnIndex = 0; room.roundStarterIndex = 0;
     
     startRound(room, true); 
-    io.to(roomId).emit("updateRoom", room); // Son halini (botlu) gönder
     broadcastRoomList();
   });
 
@@ -137,7 +134,6 @@ function leaveRoom(socket) {
         socket.leave(roomId);
         for(let i=0; i<4; i++) if(room.seats[i] && room.seats[i].id === socket.id) room.seats[i] = null;
         
-        // Kimse kalmadıysa sil (Botlar insan sayılmaz)
         let hasHuman = Object.values(room.seats).some(p => p && !p.isBot);
         if(!hasHuman) {
             delete rooms[roomId];
@@ -152,7 +148,6 @@ function leaveRoom(socket) {
     }
 }
 
-// --- OYUN MANTIĞI ---
 function startRound(room, isFirst) {
     if (!isFirst) {
         room.roundStarterIndex = (room.roundStarterIndex + 1) % 4;
@@ -163,7 +158,6 @@ function startRound(room, isFirst) {
     for(let i=0; i<4; i++) room.centerPile.push(room.deck.pop());
     dealCards(room);
     io.to(room.id).emit("gameStarted", room);
-    io.to(room.id).emit("updateScores", { scoreA: room.totalScoreA, scoreB: room.totalScoreB });
     checkBotTurn(room);
 }
 
@@ -224,8 +218,15 @@ function calculateRoundEnd(room) {
         io.to(room.id).emit("matchOver", { scoreA: room.totalScoreA, scoreB: room.totalScoreB, winner });
         room.gameStarted = false;
     } else {
-        io.to(room.id).emit("roundOver", {});
-        setTimeout(() => startRound(room, false), 3000);
+        // SKOR TABLOSU İÇİN VERİ GÖNDERİYORUZ
+        io.to(room.id).emit("roundOver", {
+            scoreA: room.totalScoreA,
+            scoreB: room.totalScoreB,
+            target: room.targetScore,
+            lastRoundA: sA,
+            lastRoundB: sB
+        });
+        setTimeout(() => startRound(room, false), 5000); // Tabloyu görmek için 5sn bekle
     }
 }
 
@@ -269,12 +270,7 @@ function createDeck(room) {
     room.deck.sort(() => Math.random() - 0.5);
 }
 function dealCards(room) {
-    for(let i=0; i<4; i++) {
-        if(room.seats[i]) {
-            room.seats[i].hand = []; 
-            for(let k=0; k<4; k++) if(room.deck.length) room.seats[i].hand.push(room.deck.pop());
-        }
-    }
+    for(let i=0; i<4; i++) if(room.seats[i]) { room.seats[i].hand = []; for(let k=0; k<4; k++) if(room.deck.length) room.seats[i].hand.push(room.deck.pop()); }
 }
 
 const PORT = process.env.PORT || 3000;
