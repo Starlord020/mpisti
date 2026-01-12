@@ -6,7 +6,6 @@
     <title>Süper Pişti Pro</title>
     <style>
         :root {
-            /* ESKİ ORİJİNAL TEMA */
             --bg-dark: #051c0b;
             --bg-light: #0d3b16;
             --gold: #f1c40f;
@@ -17,6 +16,8 @@
             font-family: 'Segoe UI', sans-serif; 
             background: radial-gradient(circle at center, var(--bg-light) 0%, var(--bg-dark) 100%); 
             margin: 0; overflow: hidden; height: 100vh; color: white; user-select: none; 
+            /* Mobilde kaydırmayı engelle */
+            position: fixed; width: 100%;
         }
         
         .screen { display: none; height: 100%; width: 100%; position: absolute; top: 0; left: 0; background: var(--bg-dark); z-index: 20; flex-direction: column; align-items: center; justify-content: center; }
@@ -28,25 +29,70 @@
         .login-input { background: rgba(0, 0, 0, 0.3); border: 1px solid #2a5c35; padding: 15px; border-radius: 25px; color: white; text-align: center; font-size: 16px; width: 280px; }
         .btn-main { background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%); border: none; padding: 15px 50px; border-radius: 30px; color: #3e2723; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 25px; }
 
-        /* BUTONLAR */
-        .top-btn { position: fixed; top: 15px; width: 45px; height: 45px; border-radius: 50%; border: 1px solid #555; cursor: pointer; z-index: 200; font-size: 20px; background: rgba(0,0,0,0.6); color: white; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        #fs-btn { right: 15px; } 
-        #mic-btn { right: 70px; }
-        #cam-btn { right: 125px; }
-        #share-btn { right: 180px; background: #3498db; }
-        #leave-btn { left: 15px; background: #c0392b; border-color: #e74c3c; }
-        .active-btn { background: #2ecc71 !important; box-shadow: 0 0 10px #2ecc71; }
+        /* --- YENİ BUTON SİSTEMİ (MOBİL MENÜLÜ) --- */
+        /* Genel buton stili */
+        .menu-btn { 
+            width: 40px; height: 40px; border-radius: 50%; border: 1px solid #555; 
+            cursor: pointer; font-size: 18px; background: rgba(0,0,0,0.6); color: white; 
+            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+            margin-bottom: 8px; /* Menü içindeki boşluk */
+        }
+        .active-btn { background: #2ecc71 !important; box-shadow: 0 0 10px #2ecc71; border-color: #2ecc71; }
         .mic-talking { border-color: #2ecc71 !important; box-shadow: 0 0 15px #2ecc71; }
 
+        /* Sol Üst Sabit Çıkış Butonu */
+        #left-exit-container { position: fixed; top: 10px; left: 10px; z-index: 200; }
+        #leave-btn { background: #c0392b; border-color: #e74c3c; margin:0;}
+
+        /* Sağ Üst Menü Alanı */
+        #right-menu-container { position: fixed; top: 10px; right: 10px; z-index: 200; display: flex; flex-direction: column; align-items: flex-end; }
+        
+        /* Menü Açma Butonu (Hamburger) */
+        #mobile-menu-toggle { display: none; font-size: 24px; z-index: 201; } /* Mobilde görünecek */
+
+        /* Gizlenecek Butonların Kapsayıcısı */
+        #hidden-buttons-wrapper {
+            display: flex;
+            flex-direction: column; /* Masaüstünde de dikey olsun, sağa yaslı */
+            gap: 5px;
+        }
+        #share-btn { background: #3498db; border-color:#2980b9; }
+
+        /* MOBİL MENÜ RESPONSIVE */
+        @media (max-width: 768px) {
+            /* Toggle butonunu göster */
+            #mobile-menu-toggle { display: flex; }
+            
+            /* Butonları gizle ve menü haline getir */
+            #hidden-buttons-wrapper {
+                display: none; /* Varsayılan gizli */
+                position: absolute;
+                top: 50px; /* Toggle butonunun altı */
+                right: 0;
+                background: rgba(0,0,0,0.85);
+                padding: 10px 5px;
+                border-radius: 10px;
+                border: 1px solid #444;
+            }
+            /* Menü aktifken göster */
+            #hidden-buttons-wrapper.menu-open { display: flex; }
+            .menu-btn { width: 35px; height: 35px; font-size: 16px; } /* Mobilde biraz küçült */
+        }
+
+
         /* OYUN ALANI */
-        #game-board { display: grid; grid-template-columns: 100px 1fr 100px; grid-template-rows: 120px 1fr 160px; width: 100%; height: 100%; padding: 5px; box-sizing: border-box; }
+        #game-board { 
+            display: grid; 
+            grid-template-columns: 80px 1fr 80px; /* Yan koltukları daralttım */
+            grid-template-rows: 100px 1fr 140px; /* Üst koltuğu daralttım */
+            width: 100%; height: 100%; padding: 5px; box-sizing: border-box; 
+        }
         
         .seat { display: flex; align-items: center; justify-content: center; position: relative; }
-        #seat-top { grid-column: 2; grid-row: 1; }
-        #seat-left { grid-column: 1; grid-row: 2; }
-        #seat-right { grid-column: 3; grid-row: 2; }
+        #seat-top { grid-column: 2; grid-row: 1; align-items: flex-start; padding-top: 5px; } /* Üste yasla */
+        #seat-left { grid-column: 1; grid-row: 2; justify-content: flex-start; padding-left: 5px; } /* Sola yasla */
+        #seat-right { grid-column: 3; grid-row: 2; justify-content: flex-end; padding-right: 5px; } /* Sağa yasla */
         
-        /* ALT KOLTUK DÜZENİ: KAMERA SOLDA, EL SAĞDA */
         #seat-bottom { 
             grid-column: 2; grid-row: 3; 
             align-items: flex-end; 
@@ -54,32 +100,32 @@
         }
         #content-bottom {
             display: flex;
-            flex-direction: row; /* Yan yana */
+            flex-direction: row;
             align-items: flex-end;
-            gap: 20px;
+            gap: 15px;
         }
 
         .seat-content { display: flex; flex-direction: column; align-items: center; width: 100%; }
 
         /* OYUNCU KUTUSU */
-        .player-box { width: 80px; height: 80px; background: #111; border: 2px solid #444; border-radius: 10px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; transition:0.2s;}
+        .player-box { width: 70px; height: 70px; background: #111; border: 2px solid #444; border-radius: 10px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; transition:0.2s;}
         .player-box img { width: 100%; height: 100%; object-fit: cover; }
-        .player-name { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); font-size: 10px; text-align: center; padding: 2px 0; }
+        .player-name { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); font-size: 9px; text-align: center; padding: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .muted-icon { position: absolute; top: 2px; right: 2px; font-size: 14px; display: none; background: rgba(0,0,0,0.7); padding: 2px; border-radius: 50%; }
         .turn-active { border-color: var(--gold); box-shadow: 0 0 15px var(--gold); }
 
-        /* KARTLAR (BÜYÜTÜLDÜ) */
-        .my-card { width: 130px; margin-left: -70px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); cursor: pointer; transition: transform 0.2s; }
+        /* KARTLAR */
+        .my-card { width: 110px; margin-left: -60px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); cursor: pointer; transition: transform 0.2s; }
         .my-card:first-child { margin-left: 0; }
         .my-card:hover { transform: translateY(-40px); margin-right: 15px; }
         
-        .opponent-card { width: 45px; border-radius: 4px; border: 1px solid #aaa; margin-left: -30px; background: white; }
+        .opponent-card { width: 40px; border-radius: 4px; border: 1px solid #aaa; margin-left: -25px; background: white; }
         /* ORTA HEDEF ALANI */
         #center-zone { grid-column: 2; grid-row: 2; display: flex; justify-content: center; align-items: center; position: relative; }
-        #center-target { width: 110px; height: 150px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 8px; display: flex; justify-content: center; align-items: center; }
+        #center-target { width: 100px; height: 140px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 8px; display: flex; justify-content: center; align-items: center; }
         
-        .center-card { width: 110px; position: absolute; border-radius: 8px; box-shadow: 0 3px 8px rgba(0,0,0,0.5); transition: transform 0.2s; }
-        .flying-card { position: fixed; z-index: 9999; transition: transform 0.5s ease-out; pointer-events: none; width: 110px; margin:0!important; }
+        .center-card { width: 100px; position: absolute; border-radius: 8px; box-shadow: 0 3px 8px rgba(0,0,0,0.5); transition: transform 0.2s; }
+        .flying-card { position: fixed; z-index: 9999; transition: transform 0.5s ease-out; pointer-events: none; width: 100px; margin:0!important; }
 
         /* BOŞ KOLTUK */
         .empty-seat { width: 60px; height: 60px; border: 2px dashed #777; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #aaa; font-size: 24px; }
@@ -102,16 +148,36 @@
         .legal-link { color: var(--gold); text-decoration: underline; cursor: pointer; }
 
         canvas { display: none; }
+
+        /* MOBİL DÜZELTMELERİ (ScreenShot'a göre) */
+        @media (max-width: 600px) {
+            #game-board { grid-template-columns: 60px 1fr 60px; grid-template-rows: 80px 1fr 140px; padding: 2px; }
+            .my-card { width: 90px; margin-left: -50px; }
+            .center-card { width: 80px; }
+            .player-box { width: 55px; height: 55px; }
+            .player-name { font-size: 8px; }
+            .opponent-card { width: 30px; margin-left: -20px; }
+            #content-bottom { gap: 10px; }
+            #seat-top { padding-top: 60px; } /* Üstteki menüden kaçmak için */
+        }
     </style>
 </head>
 <body>
-    <button id="fs-btn" class="top-btn" onclick="toggleFS()">⛶</button>
-    <button id="mic-btn" class="top-btn" onclick="toggleMic()">🎤</button>
-    <button id="cam-btn" class="top-btn" onclick="toggleCam()">📷</button>
-    <button id="share-btn" class="top-btn" onclick="copyLink()" style="display:none;">🔗</button>
+    <div id="left-exit-container">
+        <div id="game-ui" style="display:none;">
+            <button id="leave-btn" class="menu-btn" onclick="leave()">🚪</button>
+        </div>
+    </div>
 
-    <div id="game-ui" style="display:none;">
-        <button id="leave-btn" class="top-btn" onclick="leave()">🚪</button>
+    <div id="right-menu-container">
+        <button id="mobile-menu-toggle" class="menu-btn" onclick="toggleMobileMenu()">☰</button>
+        
+        <div id="hidden-buttons-wrapper">
+            <button id="share-btn" class="menu-btn" onclick="copyLink()" style="display:none;">🔗</button>
+            <button id="cam-btn" class="menu-btn" onclick="toggleCam()">📷</button>
+            <button id="mic-btn" class="menu-btn" onclick="toggleMic()">🎤</button>
+            <button id="fs-btn" class="menu-btn" onclick="toggleFS()">⛶</button>
+        </div>
     </div>
 
     <div id="scoreboard-modal">
@@ -202,14 +268,19 @@
             if(inviteCode) { document.getElementById('invite-msg').style.display='block'; }
         };
 
+        // --- MENÜ FONKSİYONU ---
+        function toggleMobileMenu() {
+            document.getElementById('hidden-buttons-wrapper').classList.toggle('menu-open');
+        }
+
         // --- TASARIM FONKSİYONLARI ---
         function getSrc(s,v) { return `/img/${{'♥':'hearts','♦':'diamonds','♣':'clubs','♠':'spades'}[s]}_${v}.png`; }
-        function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
-        function copyLink() { navigator.clipboard.writeText(`${window.location.origin}/?oda=${curRoom}`).then(()=>alert("Link kopyalandı!")); }
+        function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); toggleMobileMenu(); }
+        function copyLink() { navigator.clipboard.writeText(`${window.location.origin}/?oda=${curRoom}`).then(()=>alert("Link kopyalandı!")); toggleMobileMenu(); }
         function openTerms(t) { document.getElementById('terms-modal').style.display='flex'; }
         function closeModal() { document.getElementById('terms-modal').style.display='none'; }
 
-        // --- SES SİSTEMİ (BLOB YÖNTEMİ - EN KARARLI) ---
+        // --- SES SİSTEMİ (BLOB YÖNTEMİ) ---
         function toggleMic() {
             if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
             if(audioCtx.state==='suspended') audioCtx.resume();
@@ -217,12 +288,11 @@
             if(isMuted) {
                 navigator.mediaDevices.getUserMedia({audio:true}).then(s => {
                     localStream = s;
-                    // Ses verisini küçük parçalarla gönder
                     mediaRec = new MediaRecorder(s, {mimeType:'audio/webm;codecs=opus'});
                     mediaRec.ondataavailable = e => { 
                         if(e.data.size>0 && curRoom && !isMuted) socket.emit("streamData", {roomId:curRoom, type:'audio', payload:e.data}); 
                     };
-                    mediaRec.start(200); // 200ms gecikme ile gönder
+                    mediaRec.start(200);
                     isMuted=false; document.getElementById('mic-btn').classList.add('active-btn');
                     socket.emit("speaking", {roomId:curRoom, isSpeaking:true});
                 }).catch(e => alert("Mikrofon hatası: "+e));
@@ -232,6 +302,7 @@
                 isMuted=true; document.getElementById('mic-btn').classList.remove('active-btn');
                 socket.emit("speaking", {roomId:curRoom, isSpeaking:false});
             }
+            toggleMobileMenu(); // Menüyü kapat
         }
 
         async function toggleCam() {
@@ -261,16 +332,16 @@
                 socket.emit("streamData", {roomId:curRoom, type:'video', payload:null});
                 updCam('bottom', null);
             }
+            toggleMobileMenu(); // Menüyü kapat
         }
 
         socket.on("streamData", d => {
             if(mutedUsers.has(d.id)) return;
             if(d.type==='audio' && !isMuted) {
-                // BLOB OYNATMA (Gecikmeli ama kesin çalışır)
                 const blob = new Blob([d.payload], {type: 'audio/webm;codecs=opus'});
                 const audio = new Audio(URL.createObjectURL(blob));
                 audio.play().then(() => {
-                    setTimeout(() => URL.revokeObjectURL(audio.src), 1000); // RAM temizliği
+                    setTimeout(() => URL.revokeObjectURL(audio.src), 1000); 
                 }).catch(e=>{});
             } else if(d.type==='video') {
                 if(!lastState) return;
