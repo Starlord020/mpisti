@@ -42,11 +42,11 @@
         .login-input { background: rgba(0, 0, 0, 0.4); border: 1px solid #2a5c35; padding: 15px; border-radius: 25px; color: white; text-align: center; font-size: 16px; width: 280px; margin-bottom: 15px; }
         .btn-main { background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%); border: none; padding: 15px 50px; border-radius: 30px; color: #3e2723; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 15px; box-shadow: 0 5px 15px rgba(241, 196, 15, 0.2); }
 
-        /* OYUN ALANI */
+        /* OYUN ALANI IZGARASI - ALT SATIR YÜKSELTİLDİ */
         #game-board { 
             display: grid; 
             grid-template-columns: 80px 1fr 80px; 
-            grid-template-rows: 100px 1fr 140px; 
+            grid-template-rows: 100px 1fr 180px; /* DÜZELTME: 140px -> 180px (Kartlar sığsın diye) */
             width: 100%; height: 100%; padding: 5px; box-sizing: border-box; 
         }
         
@@ -54,19 +54,19 @@
         #seat-top { grid-column: 2; grid-row: 1; align-items: flex-start; padding-top: 10px; }
         #seat-left { grid-column: 1; grid-row: 2; justify-content: flex-start; padding-left: 5px; }
         #seat-right { grid-column: 3; grid-row: 2; justify-content: flex-end; padding-right: 5px; }
-        #seat-bottom { grid-column: 2; grid-row: 3; align-items: flex-end; padding-bottom: 10px; }
+        #seat-bottom { grid-column: 2; grid-row: 3; align-items: flex-end; padding-bottom: 20px; } /* Alttan boşluk artırıldı */
         
         /* İÇERİK DÜZENİ */
         .seat-content { display: flex; flex-direction: column; align-items: center; width: 100%; }
         /* Masaüstü alt taraf (Kamera + Kartlar) */
-        #content-bottom { display: flex; flex-direction: row; align-items: flex-end; gap: 20px; justify-content: center; }
+        #content-bottom { display: flex; flex-direction: row; align-items: flex-end; gap: 20px; justify-content: center; height: 100%; }
 
         /* OYUNCU KUTUSU */
         .player-box {
             width: auto; min-width: 70px; height: 30px; 
             background: rgba(0, 0, 0, 0.6); border: 1px solid #555; border-radius: 15px; 
             display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; transition: border-color 0.2s; /* Sadece border animasyonu */
+            cursor: pointer; transition: border-color 0.2s;
             padding: 0 10px; margin-bottom: 5px;
             position: relative; overflow: hidden;
         }
@@ -75,7 +75,7 @@
         
         /* KAMERA AÇIKKEN */
         .player-box.has-cam { background: #000; border-color: #777; padding: 0; }
-        #content-bottom .player-box.has-cam { width: 80px; height: 80px; border-radius: 10px; }
+        #content-bottom .player-box.has-cam { width: 80px; height: 80px; border-radius: 10px; margin-bottom: 0; }
         .seat:not(#seat-bottom) .player-box.has-cam { width: 130px; height: 130px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 50; }
         .player-box.has-cam .player-name { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); font-size: 10px; padding: 2px 0; }
         .player-box.has-cam img { display: block; }
@@ -85,7 +85,7 @@
         .turn-active { border-color: var(--gold); box-shadow: 0 0 10px var(--gold); }
 
         /* KARTLAR */
-        .hand-container { display: flex; justify-content: center; height: 50px; } /* Kartlar için ayrı div */
+        .hand-container { display: flex; justify-content: center; height: 100%; align-items: flex-end; } 
         
         .my-card { width: 110px; margin-left: -60px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); cursor: pointer; transition: transform 0.2s; }
         .my-card:first-child { margin-left: 0; }
@@ -137,9 +137,10 @@
                 margin: 0;
             }
             
+            /* KARTLARI YUKARI KALDIR (DÜZELTME) */
             #content-bottom .hand-container {
                 position: absolute;
-                bottom: 10px;
+                bottom: 30px; /* DÜZELTME: 10px -> 30px. Kartları yukarı ittik */
                 left: 0;
                 width: 100%;
                 justify-content: center;
@@ -309,7 +310,6 @@
         socket.on("streamData", d => {
             if(mutedUsers.has(d.id)) return;
             if(d.type==='audio') {
-                // DÜZELTME: isMuted kontrolü kaldırıldı. Sessiz olsam da duymalıyım.
                 const blob = new Blob([d.payload], {type: 'audio/webm;codecs=opus'});
                 const audio = new Audio(URL.createObjectURL(blob));
                 audio.play().then(() => { setTimeout(() => URL.revokeObjectURL(audio.src), 1000); }).catch(e=>{});
@@ -320,7 +320,7 @@
             }
         });
 
-        // KAMERA GÜNCELLEME (FLICKER ÖNLEYİCİ)
+        // KAMERA GÜNCELLEME
         function updCam(pos, data) {
             let container = document.querySelector(pos==='bottom' ? '#content-bottom' : `#content-${pos}`);
             let box = container.querySelector('.player-box');
@@ -405,10 +405,8 @@
             let turnClass = (room.gameStarted && room.turnIndex===actual) ? 'turn-active' : '';
             let avatar = p.isBot ? "/img/bot_avatar.png" : "/img/user_placeholder.png";
 
-            // DÜZELTME: KUTUYU YENİDEN YARATMA, VARSA GÜNCELLE
             let box = container.querySelector('.player-box');
             if(!box) {
-                // Yoksa yarat
                 let boxHTML = `
                 <div class="player-box ${turnClass}" onclick="toggleMute('${p.id}','${pos}')">
                     <img src="${avatar}" onerror="this.src='/img/user_placeholder.png'">
@@ -418,14 +416,11 @@
                 <div class="hand-container"></div>`;
                 container.innerHTML = boxHTML;
             } else {
-                // Varsa sadece class ve yazı güncelle (resmi elleme)
-                // has-cam sınıfını korumak için kontrol et
                 let hasCam = box.classList.contains('has-cam');
                 box.className = `player-box ${turnClass} ${hasCam ? 'has-cam' : ''}`;
                 box.querySelector('.player-name').innerText = p.name;
             }
 
-            // KARTLARI GÜNCELLE
             let handContainer = container.querySelector('.hand-container');
             let handHtml = "";
             if(actual===myIdx) {
