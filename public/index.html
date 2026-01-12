@@ -54,79 +54,28 @@
         #seat-top { grid-column: 2; grid-row: 1; align-items: flex-start; padding-top: 10px; }
         #seat-left { grid-column: 1; grid-row: 2; justify-content: flex-start; padding-left: 5px; }
         #seat-right { grid-column: 3; grid-row: 2; justify-content: flex-end; padding-right: 5px; }
-        #seat-bottom { grid-column: 2; grid-row: 3; align-items: flex-end; padding-bottom: 10px; }
         
+        /* MASAÜSTÜ İÇİN ALT KOLTUK DÜZENİ (Yan Yana) */
+        #seat-bottom { grid-column: 2; grid-row: 3; align-items: flex-end; padding-bottom: 10px; }
         #content-bottom { display: flex; flex-direction: row; align-items: flex-end; gap: 15px; }
         .seat-content { display: flex; flex-direction: column; align-items: center; }
 
-        /* --- OYUNCU KUTUSU (YENİ DÜZENLEME) --- */
+        /* OYUNCU KUTUSU */
         .player-box {
-            /* Varsayılan: Sadece İsim (Küçük) */
-            width: auto; 
-            min-width: 70px;
-            height: 30px; 
-            background: rgba(0, 0, 0, 0.6); /* Sadece isim varken yarı saydam */
-            border: 1px solid #555; 
-            border-radius: 15px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            cursor: pointer; 
-            transition: all 0.3s ease;
-            padding: 0 10px;
-            position: relative;
-            overflow: hidden;
+            width: auto; min-width: 70px; height: 30px; 
+            background: rgba(0, 0, 0, 0.6); border: 1px solid #555; border-radius: 15px; 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; transition: all 0.3s ease; padding: 0 10px;
+            position: relative; overflow: hidden;
         }
-
-        /* İsim Stili */
-        .player-name { 
-            font-size: 12px; 
-            text-align: center; 
-            white-space: nowrap; 
-            color: white;
-            z-index: 2;
-        }
-
-        /* Resim Varsayılan Olarak GİZLİ (Kırık ikonu engellemek için) */
-        .player-box img { 
-            display: none; 
-            width: 100%; height: 100%; 
-            object-fit: cover; 
-            position: absolute; top: 0; left: 0;
-        }
-
-        /* --- KAMERA AÇIKKEN --- */
-        .player-box.has-cam {
-            background: #000; /* Kamera arkası siyah */
-            border-color: #777;
-            padding: 0;
-        }
+        .player-name { font-size: 12px; text-align: center; white-space: nowrap; color: white; z-index: 2; }
+        .player-box img { display: none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
         
-        /* Ben (Alt Koltuk) Kamera Boyutu */
-        #content-bottom .player-box.has-cam {
-            width: 80px; 
-            height: 80px; 
-            border-radius: 10px;
-        }
-
-        /* Rakipler (Üst/Sağ/Sol) Kamera Boyutu - 2 KAT BÜYÜK */
-        .seat:not(#seat-bottom) .player-box.has-cam {
-            width: 130px; 
-            height: 130px; 
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            z-index: 50; /* Kartların üstüne çıkabilsin */
-        }
-
-        /* Kamera açıkken isim altta dursun */
-        .player-box.has-cam .player-name {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: rgba(0,0,0,0.6);
-            font-size: 10px;
-            padding: 2px 0;
-        }
-
-        /* Kamera açıkken resmi göster */
+        /* KAMERA AÇIKKEN */
+        .player-box.has-cam { background: #000; border-color: #777; padding: 0; }
+        #content-bottom .player-box.has-cam { width: 80px; height: 80px; border-radius: 10px; }
+        .seat:not(#seat-bottom) .player-box.has-cam { width: 130px; height: 130px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 50; }
+        .player-box.has-cam .player-name { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); font-size: 10px; padding: 2px 0; }
         .player-box.has-cam img { display: block; }
 
         .mic-icon { position: absolute; top: 5px; right: 5px; font-size: 12px; display: none; background: rgba(0,0,0,0.6); border-radius: 50%; padding: 3px; z-index: 3;}
@@ -137,50 +86,62 @@
         .my-card { width: 110px; margin-left: -60px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); cursor: pointer; transition: transform 0.2s; }
         .my-card:first-child { margin-left: 0; }
         .my-card:hover { transform: translateY(-30px) scale(1.05); margin-right: 10px; z-index: 10; }
-        
         .opponent-card { width: 40px; border-radius: 4px; border: 1px solid #aaa; margin-left: -25px; background: white; }
         
         #center-zone { grid-column: 2; grid-row: 2; display: flex; justify-content: center; align-items: center; position: relative; }
         #center-target { width: 100px; height: 140px; border: 2px dashed rgba(255,255,255,0.15); border-radius: 8px; position: relative; }
-        
         .center-card { width: 100px; position: absolute; top:0; left:0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         .flying-card { position: fixed; z-index: 9999; transition: transform 0.5s ease-out; pointer-events: none; width: 100px; margin:0!important; }
 
-        /* BOŞ KOLTUK */
+        /* DİĞER UI */
         .empty-seat { width: 60px; height: 60px; border: 2px dashed #777; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #aaa; font-size: 24px; transition: 0.2s; }
         .empty-seat:hover { border-color: var(--gold); color: var(--gold); background: rgba(255,255,255,0.1); }
-
-        /* MODALLAR */
         #scoreboard-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; display: none; align-items: center; justify-content: center; }
         .score-board { background: #222; border: 2px solid var(--gold); padding: 25px; border-radius: 15px; text-align: center; width: 280px; }
         .score-row { display: flex; justify-content: space-between; margin: 10px 0; border-bottom: 1px solid #444; padding: 5px; font-size: 18px; }
-        
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; display: none; align-items: center; justify-content: center; }
         .glass-panel { background: var(--glass); border: 1px solid #444; border-radius: 15px; padding: 20px; width: 90%; max-width: 400px; text-align: center; }
-        
         .btn-green { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; margin: 5px; }
         .btn-red { background: #c0392b; color: white; padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; margin: 5px; }
-        
         .legal-check { text-align: left; font-size: 13px; color: #aaa; width: 280px; margin-top: 10px; }
         .legal-check label { display: flex; align-items: center; margin-bottom: 5px; cursor: pointer; }
         .legal-check input { margin-right: 10px; accent-color: var(--gold); }
         .legal-link { color: var(--gold); text-decoration: underline; cursor: pointer; }
-
         canvas { display: none; }
 
-        /* MOBİL DÜZELTMELERİ */
+        /* --- MOBİL DÜZELTMELERİ --- */
         @media (max-width: 600px) {
             #game-board { grid-template-columns: 60px 1fr 60px; grid-template-rows: 80px 1fr 140px; padding: 2px; }
-            .my-card { width: 90px; margin-left: -50px; }
+            
+            /* DÜZELTME 1: KART KAYMASINI AZALT */
+            .my-card { width: 90px; margin-left: -35px; } /* -50px'ten -35px'e düşürüldü */
+            
             .center-card, .flying-card { width: 80px; }
             #center-target { width: 80px; height: 110px; }
-            
-            /* Mobilde 2 kat büyüklük çok yer kaplarsa diye hafif ayar */
-            .seat:not(#seat-bottom) .player-box.has-cam { width: 90px; height: 90px; } 
-            
+            .seat:not(#seat-bottom) .player-box.has-cam { width: 90px; height: 90px; }
             .opponent-card { width: 30px; margin-left: -20px; }
-            #content-bottom { gap: 10px; }
             #seat-top { padding-top: 20px; }
+
+            /* DÜZELTME 2: KAMERAYI SOL ALTA SABİTLE */
+            #seat-bottom { display: block; padding: 0; } /* Flex'i boz */
+            #content-bottom { display: block; text-align: center; width: 100%; }
+            
+            /* Alt oyuncunun kamera kutusunu sol alt köşeye sabitle */
+            #content-bottom .player-box {
+                position: fixed !important;
+                bottom: 15px !important;
+                left: 15px !important;
+                z-index: 100;
+                margin: 0;
+            }
+
+            /* Kartların olduğu divi kameradan uzaklaştır ve ortala */
+            #my-hand {
+                display: inline-flex;
+                justify-content: center;
+                padding-left: 60px; /* Soldaki kameranın üzerine binmemesi için boşluk */
+                padding-bottom: 15px;
+            }
         }
     </style>
 </head>
@@ -358,18 +319,10 @@
             }
         });
 
-        // KAMERA GÜNCELLEME (CLASS TOGGLE İLE)
         function updCam(pos, data) {
             let div = document.querySelector(pos==='bottom' ? '#content-bottom .player-box' : `#content-${pos} .player-box`);
             let img = div.querySelector('img');
-            
-            if(data) {
-                img.src = data;
-                div.classList.add('has-cam');
-            } else {
-                img.src = "";
-                div.classList.remove('has-cam');
-            }
+            if(data) { img.src = data; div.classList.add('has-cam'); } else { img.src = ""; div.classList.remove('has-cam'); }
         }
 
         function toggleMute(id, pos) {
@@ -460,8 +413,6 @@
                 handHtml+=`</div>`;
             }
 
-            // KAMERA KUTUSU (DATA YOKSA KÜÇÜK, VARSA BÜYÜK)
-            // Not: İlk renderda data olmadığı için küçük başlar
             let camBox = `
                 <div class="player-box ${turnClass}" onclick="toggleMute('${p.id}','${pos}')">
                     <img src="" alt=""> 
