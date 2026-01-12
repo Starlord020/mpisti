@@ -11,14 +11,15 @@ app.use(express.static("public"));
 
 let rooms = {};
 
-// ODA LİSTESİNİ HERKESE GÖNDER
 function broadcastRoomList() {
     let list = [];
     for (let key in rooms) {
         let r = rooms[key];
+        // Sadece dolu koltuk sayısını (botlar dahil) say
+        let count = Object.values(r.seats).filter(p => p !== null).length;
         list.push({
             id: r.id,
-            count: r.players.length,
+            count: count,
             status: r.gameStarted ? "Oynanıyor" : "Bekliyor"
         });
     }
@@ -28,12 +29,11 @@ function broadcastRoomList() {
 io.on("connection", (socket) => {
   broadcastRoomList();
 
-  // --- SESLİ SOHBET (SADECE ODA İÇİ) ---
+  // --- SESLİ SOHBET ---
   socket.on("voice", (data) => {
-      // Veriyi gönderen kişinin odasını bul
       let room = rooms[data.roomId];
-      if (room && room.players.find(p => p.id === socket.id)) {
-          // Sadece o odadakilere (gönderen hariç) ilet
+      // Sadece aynı odadaysa ve oyundaysa (koltuktaysa) sesi ilet
+      if (room && isPlayerInRoom(room, socket.id)) {
           socket.to(data.roomId).emit("voice", data.blob);
       }
   });
@@ -41,7 +41,6 @@ io.on("connection", (socket) => {
   socket.on("speaking", (data) => {
       let room = rooms[data.roomId];
       if (room) {
-          // Konuşuyor efektini odaya yay
           socket.to(data.roomId).emit("playerSpeaking", { 
               id: socket.id, 
               isSpeaking: data.isSpeaking 
@@ -49,117 +48,201 @@ io.on("connection", (socket) => {
       }
   });
 
-  // --- OYUN YÖNETİMİ ---
+  // --- ODA YÖNETİMİ ---
   socket.on("createRoom", (data) => {
     let roomId = data.roomId;
     if (rooms[roomId]) {
       socket.emit("errorMsg", "Bu isimde bir masa zaten var!");
     } else {
       rooms[roomId] = {
-        id: roomId, players: [], deck: [], centerPile: [], teamAPile: [], teamBPile: [],
+        id: roomId, 
+        seats: {0: null, 1: null, 2: null, 3: null}, // 4 Koltuk
+        deck: [], centerPile: [], teamAPile: [], teamBPile: [],
         totalScoreA: 0, totalScoreB: 0, targetScore: 151,
         gameStarted: false, turnIndex: 0, roundStarterIndex: 0, admin: socket.id, lastWinnerTeam: null 
       };
-      joinRoom(socket, roomId, data.username);
+      
+      // Kurucu otomatik 0. koltuğa oturur
+      socket.join(roomId);
+      rooms[roomId].seats[0] = { id: socket.id, name: data.username, isBot: false, hand: [] };
+      
+      io.to(roomId).emit("updateRoom", rooms[roomId]);
+      broadcastRoomList();
+      // Kurucuya admin olduğunu bildir
+      socket.emit("joined", { roomId: roomId, isAdmin: true, mySeat: 0 });
     }
   });
 
   socket.on("joinRoom", (data) => {
-      if (!rooms[data.roomId]) socket.emit("errorMsg", "Masa bulunamadı.");
-      else joinRoom(socket, data.roomId, data.username);
+      let room = rooms[data.roomId];
+      if (!room) {
+          socket.emit("errorMsg", "Masa bulunamadı.");
+          return;
+      }
+      
+      // Odaya gir ama koltuğa oturma (İzleyici modu gibi başlar)
+      socket.join(data.roomId);
+      
+      // Kullanıcıya odayı göster, koltuk seçmesini bekle
+      socket.emit("joined", { roomId: data.roomId, isAdmin: false, mySeat: -1 }); // -1: Koltuksuz
+      socket.emit("updateRoom", room);
   });
 
-  socket.on("leaveRoom", () => leaveRoom(socket));
+  // --- KOLTUK SEÇİMİ ---
+  socket.on("sitDown", (data) => {
+      let room = rooms[data.roomId];
+      let seatIdx = parseInt(data.seatIndex);
+      
+      if (!room || room.gameStarted) return;
+      if (room.seats[seatIdx] !== null) return; // Doluysa oturamaz
+
+      // Önce eski koltuğu varsa kaldır (yer değiştirme)
+      for(let i=0; i<4; i++) {
+          if(room.seats[i] && room.seats[i].id === socket.id) {
+              room.seats[i] = null;
+          }
+      }
+
+      // Yeni koltuğa oturt
+      room.seats[seatIdx] = { id: socket.id, name: data.username, isBot: false, hand: [] };
+      
+      io.to(data.roomId).emit("updateRoom", room);
+      socket.emit("joined", { roomId: data.roomId, isAdmin: (room.admin === socket.id), mySeat: seatIdx });
+      broadcastRoomList();
+  });
+
+  socket.on("addBot", (roomId) => {
+    let room = rooms[roomId];
+    if (!room || room.gameStarted || room.admin !== socket.id) return;
+
+    // İlk boş koltuğu bul
+    for(let i=0; i<4; i++) {
+        if(room.seats[i] === null) {
+            let botId = "BOT_" + Date.now() + Math.floor(Math.random()*100);
+            room.seats[i] = { id: botId, name: "Bot " + (i+1), isBot: true, hand: [] };
+            break;
+        }
+    }
+    io.to(roomId).emit("updateRoom", room);
+    broadcastRoomList();
+  });
 
   socket.on("startGame", (roomId) => {
     let room = rooms[roomId];
     if (!room || room.admin !== socket.id || room.gameStarted) return;
     
-    // Eksik oyuncuları botla tamamla
-    let count = room.players.length;
-    if (count < 2) addBotToRoom(room);
-    else if (count === 3) addBotToRoom(room);
+    // Oyuncu sayısını kontrol et (En az 2 kişi/bot)
+    let occupiedSeats = Object.values(room.seats).filter(p => p !== null);
+    if (occupiedSeats.length < 2) return;
 
     room.gameStarted = true; room.totalScoreA = 0; room.totalScoreB = 0;
-    room.roundStarterIndex = 0; room.turnIndex = 0;
+    room.roundStarterIndex = 0; room.turnIndex = 0; // 0. koltuk başlar
     startRound(room, true); 
     broadcastRoomList();
-  });
-
-  socket.on("addBot", (roomId) => {
-    let room = rooms[roomId];
-    if (room && !room.gameStarted && room.players.length < 4) {
-        addBotToRoom(room);
-        io.to(roomId).emit("updateRoom", room);
-        broadcastRoomList();
-    }
   });
 
   socket.on("playCard", (data) => {
       let room = rooms[data.roomId];
       if(!room || !room.gameStarted) return;
-      if(room.players[room.turnIndex].id !== socket.id) return;
-      processMove(room, room.players[room.turnIndex], data.cardIndex);
+      
+      let player = room.seats[room.turnIndex];
+      if(!player || player.id !== socket.id) return; // Sıra sende değil
+
+      processMove(room, player, data.cardIndex);
   });
 
+  socket.on("leaveRoom", () => leaveRoom(socket));
   socket.on("disconnect", () => leaveRoom(socket));
 });
 
-// YARDIMCI FONKSİYONLAR
-function addBotToRoom(room) {
-    let botId = "BOT_" + Date.now() + Math.floor(Math.random()*100);
-    room.players.push({ id: botId, name: "Bot " + (room.players.length+1), isBot: true, hand: [] });
-}
+// --- YARDIMCI FONKSİYONLAR ---
 
-function joinRoom(socket, roomId, username) {
-    let room = rooms[roomId];
-    if(room.players.find(p => p.id === socket.id)) return;
-    if (room.players.length < 4 && !room.gameStarted) {
-      socket.join(roomId);
-      room.players.push({ id: socket.id, name: username, isBot: false, hand: [] });
-      socket.emit("joined", { roomId: roomId, isAdmin: (room.admin === socket.id), myIndex: room.players.length - 1, target: room.targetScore });
-      io.to(roomId).emit("updateRoom", room);
-      broadcastRoomList();
-    } else socket.emit("errorMsg", "Masa dolu!");
+function isPlayerInRoom(room, socketId) {
+    return Object.values(room.seats).some(p => p && p.id === socketId);
 }
 
 function leaveRoom(socket) {
     let roomId = null;
+    // Hangi odada olduğunu bul
     for(let key in rooms) {
-        if(rooms[key].players.find(p => p.id === socket.id)) { roomId = key; break; }
+        // Socket odasına bakmaya gerek yok, koltuklara bak
+        if(Object.values(rooms[key].seats).some(p => p && p.id === socket.id)) {
+            roomId = key; break;
+        }
+        // Eğer koltukta değil ama izleyici ise (joinRoom yapmış ama oturmamış)
+        if(socket.rooms.has(key)) {
+             roomId = key; break;
+        }
     }
+
     if(roomId) {
         let room = rooms[roomId];
-        room.players = room.players.filter(p => p.id !== socket.id);
         socket.leave(roomId);
-        if (room.players.length === 0) delete rooms[roomId];
-        else {
-            if(room.admin === socket.id && !room.players[0].isBot) room.admin = room.players[0].id;
-            io.to(roomId).emit("updateRoom", room);
-            if(room.gameStarted && !room.players.some(p => !p.isBot)) delete rooms[roomId];
+
+        // Koltuktan kaldır
+        for(let i=0; i<4; i++) {
+            if(room.seats[i] && room.seats[i].id === socket.id) {
+                room.seats[i] = null;
+            }
         }
+
+        // Admin çıktıysa ve başka oyuncu varsa adminliği devret
+        if(room.admin === socket.id) {
+            let nextPlayer = Object.values(room.seats).find(p => p && !p.isBot);
+            if(nextPlayer) room.admin = nextPlayer.id;
+        }
+
+        io.to(roomId).emit("updateRoom", room);
+
+        // --- BOT TEMİZLİĞİ ---
+        // Odada hiç GERÇEK İNSAN kalmadıysa odayı sil
+        let hasHuman = Object.values(room.seats).some(p => p && !p.isBot);
+        // Ayrıca izleyici modundakileri de kontrol edebiliriz ama basitlik için koltuktakiler yeterli
+        // Eğer oyun başladıysa ve insan kalmadıysa sil
+        if(!hasHuman) {
+            delete rooms[roomId];
+        }
+
         broadcastRoomList();
     }
 }
 
 function startRound(room, isFirst) {
     if (!isFirst) {
-        room.roundStarterIndex = (room.roundStarterIndex + 1) % room.players.length;
+        // Sırayı bir sonraki dolu koltuğa geçir
+        let nextStarter = (room.roundStarterIndex + 1) % 4;
+        while(room.seats[nextStarter] === null) {
+            nextStarter = (nextStarter + 1) % 4;
+        }
+        room.roundStarterIndex = nextStarter;
         room.turnIndex = room.roundStarterIndex;
+    } else {
+        // İlk elde dolu olan ilk koltuk başlar
+        while(room.seats[room.turnIndex] === null) {
+            room.turnIndex = (room.turnIndex + 1) % 4;
+        }
     }
+
     room.teamAPile = []; room.teamBPile = []; room.centerPile = []; room.lastWinnerTeam = null;
     createDeck(room);
+    
+    // Yere 4 kart aç
     for(let i=0; i<4; i++) room.centerPile.push(room.deck.pop());
+    
     dealCards(room);
     io.to(room.id).emit("gameStarted", room);
     io.to(room.id).emit("updateScores", { scoreA: room.totalScoreA, scoreB: room.totalScoreB });
+    
     checkBotTurn(room);
 }
 
 function processMove(room, player, cardIndex) {
     if(!player.hand[cardIndex]) return;
     let playedCard = player.hand.splice(cardIndex, 1)[0]; 
-    let team = (room.players.indexOf(player) % 2 === 0) ? 'A' : 'B';
+    
+    // Takım A: 0 ve 2, Takım B: 1 ve 3
+    let pIndex = parseInt(Object.keys(room.seats).find(key => room.seats[key] === player));
+    let team = (pIndex % 2 === 0) ? 'A' : 'B';
 
     room.centerPile.push(playedCard);
     io.to(room.id).emit("updateGame", room);
@@ -179,26 +262,39 @@ function processMove(room, player, cardIndex) {
             else room.teamBPile.push(...room.centerPile);
             room.centerPile = []; room.lastWinnerTeam = team;
             finishTurn(room);
-        }, 800); // Hızlandırıldı
+        }, 800);
     } else {
         finishTurn(room);
     }
 }
 
 function finishTurn(room) {
-    let empty = room.players.every(p => p.hand.length === 0);
-    if (empty) {
+    // Herkesin eli boş mu?
+    let activePlayers = Object.values(room.seats).filter(p => p !== null);
+    let allHandsEmpty = activePlayers.every(p => p.hand.length === 0);
+
+    if (allHandsEmpty) {
         if (room.deck.length > 0) {
             dealCards(room);
-            room.turnIndex = (room.turnIndex + 1) % room.players.length; 
+            // Sıradaki oyuncuya geç
+            passTurn(room);
             io.to(room.id).emit("updateGame", { ...room, isDealAnim: true });
             checkBotTurn(room);
         } else calculateRoundEnd(room);
     } else {
-        room.turnIndex = (room.turnIndex + 1) % room.players.length;
+        passTurn(room);
         io.to(room.id).emit("updateGame", room); 
         checkBotTurn(room);
     }
+}
+
+function passTurn(room) {
+    // Bir sonraki DOLU koltuğu bul
+    let next = (room.turnIndex + 1) % 4;
+    while(room.seats[next] === null) {
+        next = (next + 1) % 4;
+    }
+    room.turnIndex = next;
 }
 
 function calculateRoundEnd(room) {
@@ -237,7 +333,7 @@ function calcScore(pile) {
 }
 
 function checkBotTurn(room) {
-    let p = room.players[room.turnIndex];
+    let p = room.seats[room.turnIndex];
     if (p && p.isBot && room.gameStarted) setTimeout(() => botPlay(room, p), 1000);
 }
 
@@ -264,7 +360,14 @@ function createDeck(room) {
     room.deck.sort(() => Math.random() - 0.5);
 }
 function dealCards(room) {
-    room.players.forEach(p => { p.hand = []; for(let i=0; i<4; i++) if(room.deck.length) p.hand.push(room.deck.pop()); });
+    // Sadece dolu koltuklara kart dağıt
+    for(let i=0; i<4; i++) {
+        let p = room.seats[i];
+        if(p) {
+            p.hand = []; 
+            for(let k=0; k<4; k++) if(room.deck.length) p.hand.push(room.deck.pop());
+        }
+    }
 }
 
 const PORT = process.env.PORT || 3000;
