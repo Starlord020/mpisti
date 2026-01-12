@@ -6,11 +6,10 @@
     <title>Süper Pişti Pro</title>
     <style>
         :root {
-            /* ESKİ ORİJİNAL RENK PALETİ */
-            --bg-dark: #051c0b; /* Çok koyu yeşil */
-            --bg-light: #0d3b16; /* Orta yeşil */
-            --gold: #f1c40f;    /* Altın Sarısı */
-            --gold-hover: #d4ac0d;
+            /* ESKİ ORİJİNAL TEMA */
+            --bg-dark: #051c0b;
+            --bg-light: #0d3b16;
+            --gold: #f1c40f;
             --glass: rgba(0, 0, 0, 0.85);
         }
         
@@ -20,109 +19,88 @@
             margin: 0; overflow: hidden; height: 100vh; color: white; user-select: none; 
         }
         
-        /* EKRAN YAPISI */
         .screen { display: none; height: 100%; width: 100%; position: absolute; top: 0; left: 0; background: var(--bg-dark); z-index: 20; flex-direction: column; align-items: center; justify-content: center; }
         .active { display: flex; }
 
-        /* GİRİŞ EKRANI ÖZEL TASARIM (RESİMDEKİ GİBİ) */
-        #login-screen {
-            background: radial-gradient(circle, #0f3f1a 0%, #031106 100%);
-        }
-        
-        .logo-area { text-align: center; margin-bottom: 30px; }
+        /* GİRİŞ EKRANI */
+        #login-screen { background: radial-gradient(circle, #0f3f1a 0%, #031106 100%); }
         .logo-text { font-size: 3rem; color: var(--gold); font-weight: bold; text-shadow: 0 4px 10px rgba(0,0,0,0.6); margin: 0; }
-        .logo-sub { color: #8ba890; font-size: 14px; margin-top: 5px; letter-spacing: 1px; }
+        .login-input { background: rgba(0, 0, 0, 0.3); border: 1px solid #2a5c35; padding: 15px; border-radius: 25px; color: white; text-align: center; font-size: 16px; width: 280px; }
+        .btn-main { background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%); border: none; padding: 15px 50px; border-radius: 30px; color: #3e2723; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 25px; }
 
-        /* INPUT VE FORM */
-        .login-input {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #2a5c35;
-            padding: 15px;
-            border-radius: 25px;
-            color: white;
-            text-align: center;
-            font-size: 16px;
-            width: 280px;
-            outline: none;
-            transition: 0.3s;
-        }
-        .login-input:focus { border-color: var(--gold); background: rgba(0,0,0,0.5); }
-
-        .legal-check {
-            margin-top: 20px;
-            text-align: left;
-            font-size: 13px;
-            color: #b0c4b5;
-            width: 280px;
-        }
-        .legal-check label { display: flex; align-items: center; margin-bottom: 8px; cursor: pointer; }
-        .legal-check input { margin-right: 10px; accent-color: var(--gold); transform: scale(1.2); }
-        
-        .legal-link { color: var(--gold); text-decoration: underline; cursor: pointer; font-weight: bold; }
-        .legal-link:hover { color: white; }
-
-        .btn-main {
-            background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%);
-            border: none;
-            padding: 15px 50px;
-            border-radius: 30px;
-            color: #3e2723;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 25px;
-            box-shadow: 0 5px 15px rgba(241, 196, 15, 0.3);
-            transition: transform 0.1s;
-        }
-        .btn-main:active { transform: scale(0.98); }
-
-        /* SAĞ ÜST İKONLAR */
-        .top-btn { position: fixed; top: 15px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #444; cursor: pointer; z-index: 200; font-size: 18px; background: rgba(0,0,0,0.4); color: white; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        /* BUTONLAR */
+        .top-btn { position: fixed; top: 15px; width: 45px; height: 45px; border-radius: 50%; border: 1px solid #555; cursor: pointer; z-index: 200; font-size: 20px; background: rgba(0,0,0,0.6); color: white; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
         #fs-btn { right: 15px; } 
-        #mic-btn { right: 65px; }
-        #cam-btn { right: 115px; }
-        #share-btn { right: 165px; background: #2980b9; border-color: #3498db; }
-        .active-btn { background: #27ae60 !important; border-color: #2ecc71; box-shadow: 0 0 10px #2ecc71; }
-        
+        #mic-btn { right: 70px; }
+        #cam-btn { right: 125px; }
+        #share-btn { right: 180px; background: #3498db; }
+        #leave-btn { left: 15px; background: #c0392b; border-color: #e74c3c; }
+        .active-btn { background: #2ecc71 !important; box-shadow: 0 0 10px #2ecc71; }
+        .mic-talking { border-color: #2ecc71 !important; box-shadow: 0 0 15px #2ecc71; }
+
         /* OYUN ALANI */
-        #game-board { display: grid; grid-template-columns: 100px 1fr 100px; grid-template-rows: 120px 1fr 140px; width: 100%; height: 100%; padding: 5px; box-sizing: border-box; }
+        #game-board { display: grid; grid-template-columns: 100px 1fr 100px; grid-template-rows: 120px 1fr 160px; width: 100%; height: 100%; padding: 5px; box-sizing: border-box; }
+        
         .seat { display: flex; align-items: center; justify-content: center; position: relative; }
         #seat-top { grid-column: 2; grid-row: 1; }
         #seat-left { grid-column: 1; grid-row: 2; }
         #seat-right { grid-column: 3; grid-row: 2; }
-        #seat-bottom { grid-column: 2; grid-row: 3; align-items: flex-end; padding-bottom: 10px; }
         
+        /* ALT KOLTUK DÜZENİ: KAMERA SOLDA, EL SAĞDA */
+        #seat-bottom { 
+            grid-column: 2; grid-row: 3; 
+            align-items: flex-end; 
+            padding-bottom: 10px;
+        }
+        #content-bottom {
+            display: flex;
+            flex-direction: row; /* Yan yana */
+            align-items: flex-end;
+            gap: 20px;
+        }
+
+        .seat-content { display: flex; flex-direction: column; align-items: center; width: 100%; }
+
         /* OYUNCU KUTUSU */
-        .player-box { width: 80px; height: 80px; background: #111; border: 2px solid #444; border-radius: 10px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .player-box { width: 80px; height: 80px; background: #111; border: 2px solid #444; border-radius: 10px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; transition:0.2s;}
         .player-box img { width: 100%; height: 100%; object-fit: cover; }
         .player-name { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); font-size: 10px; text-align: center; padding: 2px 0; }
+        .muted-icon { position: absolute; top: 2px; right: 2px; font-size: 14px; display: none; background: rgba(0,0,0,0.7); padding: 2px; border-radius: 50%; }
         .turn-active { border-color: var(--gold); box-shadow: 0 0 15px var(--gold); }
-        .speaking { border-color: #2ecc71 !important; box-shadow: 0 0 10px #2ecc71; }
-        .muted-icon { position: absolute; top: 2px; right: 2px; font-size: 14px; display: none; }
 
-        /* MODALLAR (SÖZLEŞME VS) */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-box { background: #fff; color: #333; padding: 25px; border-radius: 10px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; position: relative; }
-        .modal-close { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #c0392b; font-weight: bold; }
-
-        /* KARTLAR */
-        .my-card { width: 100px; margin-left: -50px; border-radius: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.5); cursor: pointer; transition: 0.2s; }
+        /* KARTLAR (BÜYÜTÜLDÜ) */
+        .my-card { width: 130px; margin-left: -70px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); cursor: pointer; transition: transform 0.2s; }
         .my-card:first-child { margin-left: 0; }
-        .my-card:hover { transform: translateY(-30px); }
-        .center-card { width: 90px; position: absolute; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); transition: 0.2s; }
-        .opponent-card { width: 35px; border-radius: 3px; border: 1px solid #aaa; margin-left: -22px; background: white; }
-        .flying-card { position: fixed; z-index: 9999; transition: 0.5s ease-out; pointer-events: none; width: 90px; }
+        .my-card:hover { transform: translateY(-40px); margin-right: 15px; }
+        
+        .opponent-card { width: 45px; border-radius: 4px; border: 1px solid #aaa; margin-left: -30px; background: white; }
+        /* ORTA HEDEF ALANI */
+        #center-zone { grid-column: 2; grid-row: 2; display: flex; justify-content: center; align-items: center; position: relative; }
+        #center-target { width: 110px; height: 150px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 8px; display: flex; justify-content: center; align-items: center; }
+        
+        .center-card { width: 110px; position: absolute; border-radius: 8px; box-shadow: 0 3px 8px rgba(0,0,0,0.5); transition: transform 0.2s; }
+        .flying-card { position: fixed; z-index: 9999; transition: transform 0.5s ease-out; pointer-events: none; width: 110px; margin:0!important; }
 
-        /* GENEL UI */
-        .glass-panel { background: rgba(0,0,0,0.7); border: 1px solid #444; border-radius: 15px; padding: 20px; width: 90%; max-width: 400px; text-align: center; }
-        .btn-green { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; margin: 5px; }
-        .btn-red { background: #c0392b; color: white; padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; margin: 5px; }
+        /* BOŞ KOLTUK */
+        .empty-seat { width: 60px; height: 60px; border: 2px dashed #777; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #aaa; font-size: 24px; }
+        .empty-seat:hover { border-color: var(--gold); color: var(--gold); background: rgba(255,255,255,0.1); }
 
         /* SKOR TABLOSU */
-        .score-board { background: #222; border: 2px solid var(--gold); padding: 20px; border-radius: 15px; text-align: center; width: 250px; }
-        .score-row { display: flex; justify-content: space-between; margin: 10px 0; border-bottom: 1px solid #444; padding: 5px; }
+        #scoreboard-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 150; display: none; align-items: center; justify-content: center; }
+        .score-board { background: #222; border: 2px solid var(--gold); padding: 25px; border-radius: 15px; text-align: center; width: 280px; }
+        .score-row { display: flex; justify-content: space-between; margin: 10px 0; border-bottom: 1px solid #444; padding: 5px; font-size: 18px; }
 
-        /* GİZLİ KANVAS */
+        /* UI */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; display: none; align-items: center; justify-content: center; }
+        .glass-panel { background: rgba(0,0,0,0.85); border: 1px solid #444; border-radius: 15px; padding: 20px; width: 90%; max-width: 400px; text-align: center; }
+        .btn-green { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; margin: 5px; }
+        .btn-red { background: #c0392b; color: white; padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; margin: 5px; }
+        
+        .legal-check { text-align: left; font-size: 13px; color: #aaa; width: 280px; margin-top: 15px; }
+        .legal-check label { display: flex; align-items: center; margin-bottom: 5px; cursor: pointer; }
+        .legal-check input { margin-right: 10px; accent-color: var(--gold); }
+        .legal-link { color: var(--gold); text-decoration: underline; cursor: pointer; }
+
         canvas { display: none; }
     </style>
 </head>
@@ -133,45 +111,34 @@
     <button id="share-btn" class="top-btn" onclick="copyLink()" style="display:none;">🔗</button>
 
     <div id="game-ui" style="display:none;">
-        <button class="top-btn" style="left:15px; background:#c0392b;" onclick="leave()">🚪</button>
+        <button id="leave-btn" class="top-btn" onclick="leave()">🚪</button>
+    </div>
+
+    <div id="scoreboard-modal">
+        <div class="score-board">
+            <h2 style="color:var(--gold); margin:0;">TUR SONUCU</h2>
+            <div class="score-row"><span style="color:#3498db">Takım A</span><span id="sb-score-a">0</span></div>
+            <div class="score-row"><span style="color:#e74c3c">Takım B</span><span id="sb-score-b">0</span></div>
+            <div style="margin-top:15px; font-size:12px; color:#aaa;">Yeni tur başlıyor...</div>
+        </div>
     </div>
 
     <div id="terms-modal" class="modal-overlay">
-        <div class="modal-box">
-            <span class="modal-close" onclick="closeModal()">×</span>
-            <h2 id="modal-title" style="margin-top:0;">Sözleşme</h2>
-            <div id="modal-body" style="font-size:14px; line-height:1.6;">
-                <p>1. Bu oyun eğlence amaçlıdır.</p>
-                <p>2. Küfür ve hakaret yasaktır.</p>
-                <p>3. Kişisel verileriniz 3. şahıslarla paylaşılmaz.</p>
-            </div>
+        <div class="glass-panel" style="background:#fff; color:#333;">
+            <span style="position:absolute; top:10px; right:15px; font-size:24px; cursor:pointer;" onclick="closeModal()">×</span>
+            <h3 id="modal-title">Sözleşme</h3>
+            <div style="text-align:left; font-size:14px;">1. Eğlence amaçlıdır.<br>2. Küfür yasaktır.<br>3. Veriler korunur.</div>
         </div>
     </div>
 
     <div id="login-screen" class="screen active">
-        <div class="logo-area">
-            <h1 class="logo-text">♠ PİŞTİ PRO ♦</h1>
-            <div class="logo-sub">En iyilerin masası.</div>
-        </div>
-        
+        <h1 class="logo-text">♠ PİŞTİ PRO ♦</h1>
         <p id="invite-msg" style="color:#3498db; display:none; margin-bottom:10px;">Masaya davetlisiniz!</p>
-
         <input type="text" id="username" class="login-input" placeholder="Oyuncu Adınızı Girin">
-
         <div class="legal-check">
-            <label>
-                <input type="checkbox" id="chk-age">
-                <span>18 yaşından büyüğüm.</span>
-            </label>
-            <label>
-                <input type="checkbox" id="chk-terms">
-                <span>
-                    <span class="legal-link" onclick="openTerms('terms')">Kullanıcı Sözleşmesi</span> ve 
-                    <span class="legal-link" onclick="openTerms('privacy')">Gizlilik Politikası</span>'nı okudum, kabul ediyorum.
-                </span>
-            </label>
+            <label><input type="checkbox" id="chk-age"> 18 yaşından büyüğüm.</label>
+            <label><input type="checkbox" id="chk-terms"> <span><span class="legal-link" onclick="openTerms('t')">Sözleşme</span>'yi kabul ediyorum.</span></label>
         </div>
-
         <button class="btn-main" onclick="login()">GİRİŞ YAP</button>
     </div>
 
@@ -187,37 +154,9 @@
 
     <div id="create-modal" class="modal-overlay">
         <div class="glass-panel" style="background:#222; border:1px solid var(--gold);">
-            <h3 style="color:white;">Masa Adı</h3>
-            <input type="text" id="room-name" class="login-input">
-            <br><br>
+            <h3>Masa Adı</h3><input type="text" id="room-name" class="login-input"><br><br>
             <button class="btn-green" onclick="createRoom()">OLUŞTUR</button>
             <button class="btn-red" onclick="document.getElementById('create-modal').style.display='none'">İPTAL</button>
-        </div>
-    </div>
-
-    <div id="scoreboard-modal" class="modal-overlay">
-        <div class="score-board">
-            <h2 style="color:var(--gold); margin:0;">TUR SONUCU</h2>
-            <div class="score-row">
-                <span style="color:#3498db">Takım A</span>
-                <span id="sb-score-a">0</span>
-            </div>
-            <div class="score-row">
-                <span style="color:#e74c3c">Takım B</span>
-                <span id="sb-score-b">0</span>
-            </div>
-            <div style="margin-top:15px; font-size:12px; color:#aaa;">Yeni tur başlıyor...</div>
-        </div>
-    </div>
-    
-    <div id="result-screen" class="screen">
-        <div class="glass-panel">
-            <h1 id="win-text" style="color:var(--gold);">OYUN BİTTİ</h1>
-            <div style="font-size:20px; margin:20px; border:1px solid #555; padding:10px; border-radius:10px;">
-                <p id="res-a" style="color:#3498db">Takım A: 0</p>
-                <p id="res-b" style="color:#e74c3c">Takım B: 0</p>
-            </div>
-            <button class="btn-green" onclick="leave()">ÇIKIŞ</button>
         </div>
     </div>
 
@@ -229,9 +168,21 @@
         <div id="game-board">
             <div id="seat-top" class="seat"><div class="seat-content" id="content-top"></div></div>
             <div id="seat-left" class="seat"><div class="seat-content" id="content-left"></div></div>
-            <div id="center-zone"><div></div></div>
+            
+            <div id="center-zone"><div id="center-target"></div></div>
+            
             <div id="seat-right" class="seat"><div class="seat-content" id="content-right"></div></div>
-            <div id="seat-bottom" class="seat"><div class="seat-content" id="content-bottom"></div></div>
+            <div id="seat-bottom" class="seat"><div id="content-bottom"></div></div>
+        </div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <div class="glass-panel">
+            <h1 id="win-text" style="color:var(--gold);">BİTTİ</h1>
+            <div style="font-size:20px; margin:20px; border:1px solid #555; padding:10px;">
+                <p id="res-a" style="color:#3498db">Takım A: 0</p><p id="res-b" style="color:#e74c3c">Takım B: 0</p>
+            </div>
+            <button class="btn-green" onclick="leave()">ÇIKIŞ</button>
         </div>
     </div>
 
@@ -246,63 +197,38 @@
         let mutedUsers = new Set();
 
         window.onload = () => {
-            const params = new URLSearchParams(window.location.search);
-            inviteCode = params.get('oda');
-            if(inviteCode) {
-                document.getElementById('invite-msg').style.display = 'block';
-                document.getElementById('invite-msg').innerText = `"${inviteCode}" masasına davetlisiniz.`;
-            }
+            const p = new URLSearchParams(window.location.search);
+            inviteCode = p.get('oda');
+            if(inviteCode) { document.getElementById('invite-msg').style.display='block'; }
         };
 
-        // --- TASARIM İŞLEVLERİ ---
-        function openTerms(type) {
-            document.getElementById('terms-modal').style.display = 'flex';
-            document.getElementById('modal-title').innerText = type==='terms' ? "Kullanıcı Sözleşmesi" : "Gizlilik Politikası";
-        }
-        function closeModal() { document.getElementById('terms-modal').style.display = 'none'; }
-        
+        // --- TASARIM FONKSİYONLARI ---
         function getSrc(s,v) { return `/img/${{'♥':'hearts','♦':'diamonds','♣':'clubs','♠':'spades'}[s]}_${v}.png`; }
         function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
         function copyLink() { navigator.clipboard.writeText(`${window.location.origin}/?oda=${curRoom}`).then(()=>alert("Link kopyalandı!")); }
+        function openTerms(t) { document.getElementById('terms-modal').style.display='flex'; }
+        function closeModal() { document.getElementById('terms-modal').style.display='none'; }
 
-        // --- GİRİŞ MANTIĞI (DÜZELTİLDİ) ---
-        function login() {
-            let u = document.getElementById('username').value;
-            let age = document.getElementById('chk-age').checked;
-            let terms = document.getElementById('chk-terms').checked;
+        // --- SES SİSTEMİ (BLOB YÖNTEMİ - EN KARARLI) ---
+        function toggleMic() {
+            if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+            if(audioCtx.state==='suspended') audioCtx.resume();
 
-            if(!u) return alert("Lütfen isminizi girin.");
-            if(!age) return alert("18 yaşından büyük olduğunuzu onaylamalısınız.");
-            if(!terms) return alert("Sözleşmeleri kabul etmelisiniz.");
-
-            myName = u;
-            initAudio(); // Ses kilidini aç
-
-            if(inviteCode) {
-                socket.emit('joinRoom', {roomId:inviteCode, username:myName});
-            } else {
-                show('lobby-screen');
-            }
-        }
-
-        function show(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-
-        // --- MEDYA SİSTEMİ ---
-        function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }
-
-        async function toggleMic() {
-            initAudio();
             if(isMuted) {
-                try {
-                    const s = await navigator.mediaDevices.getUserMedia({audio:true});
+                navigator.mediaDevices.getUserMedia({audio:true}).then(s => {
+                    localStream = s;
+                    // Ses verisini küçük parçalarla gönder
                     mediaRec = new MediaRecorder(s, {mimeType:'audio/webm;codecs=opus'});
-                    mediaRec.ondataavailable = e => { if(e.data.size>0 && curRoom && !isMuted) socket.emit("streamData", {roomId:curRoom, type:'audio', payload:e.data}); };
-                    mediaRec.start(200); 
+                    mediaRec.ondataavailable = e => { 
+                        if(e.data.size>0 && curRoom && !isMuted) socket.emit("streamData", {roomId:curRoom, type:'audio', payload:e.data}); 
+                    };
+                    mediaRec.start(200); // 200ms gecikme ile gönder
                     isMuted=false; document.getElementById('mic-btn').classList.add('active-btn');
                     socket.emit("speaking", {roomId:curRoom, isSpeaking:true});
-                } catch(e) { alert("Mikrofon hatası: "+e); }
+                }).catch(e => alert("Mikrofon hatası: "+e));
             } else {
                 if(mediaRec) mediaRec.stop();
+                if(localStream) localStream.getTracks().forEach(t=>t.stop());
                 isMuted=true; document.getElementById('mic-btn').classList.remove('active-btn');
                 socket.emit("speaking", {roomId:curRoom, isSpeaking:false});
             }
@@ -312,8 +238,8 @@
             if(!isCamOn) {
                 try {
                     const s = await navigator.mediaDevices.getUserMedia({video:{width:100, height:100}});
-                    const track = s.getVideoTracks()[0];
-                    const capt = new ImageCapture(track);
+                    const tr = s.getVideoTracks()[0];
+                    const capt = new ImageCapture(tr);
                     isCamOn = true; document.getElementById('cam-btn').classList.add('active-btn');
                     
                     window.camInt = setInterval(async ()=>{
@@ -337,12 +263,15 @@
             }
         }
 
-        socket.on("streamData", async d => {
+        socket.on("streamData", d => {
             if(mutedUsers.has(d.id)) return;
             if(d.type==='audio' && !isMuted) {
-                const b = await new Response(d.payload).arrayBuffer();
-                const a = await audioCtx.decodeAudioData(b);
-                const s = audioCtx.createBufferSource(); s.buffer=a; s.connect(audioCtx.destination); s.start(0);
+                // BLOB OYNATMA (Gecikmeli ama kesin çalışır)
+                const blob = new Blob([d.payload], {type: 'audio/webm;codecs=opus'});
+                const audio = new Audio(URL.createObjectURL(blob));
+                audio.play().then(() => {
+                    setTimeout(() => URL.revokeObjectURL(audio.src), 1000); // RAM temizliği
+                }).catch(e=>{});
             } else if(d.type==='video') {
                 if(!lastState) return;
                 let idx = parseInt(Object.keys(lastState.seats).find(k=>lastState.seats[k] && lastState.seats[k].id===d.id));
@@ -354,14 +283,25 @@
             let img = document.querySelector(`#content-${pos} .player-box img`);
             if(img) img.src = data || "/img/user_placeholder.png";
         }
-
         function toggleMute(id, pos) {
             if(id===socket.id) return;
             if(mutedUsers.has(id)) { mutedUsers.delete(id); document.querySelector(`#content-${pos} .muted-icon`).style.display='none'; }
             else { mutedUsers.add(id); document.querySelector(`#content-${pos} .muted-icon`).style.display='block'; }
         }
 
-        // --- OYUN ---
+        // --- GİRİŞ VE OYUN ---
+        function login() {
+            let u=document.getElementById('username').value, a=document.getElementById('chk-age').checked, t=document.getElementById('chk-terms').checked;
+            if(!u) return alert("İsim giriniz."); if(!a) return alert("Yaş onayı gerekli."); if(!t) return alert("Sözleşme onayı gerekli.");
+            myName=u; 
+            if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+            if(audioCtx.state==='suspended') audioCtx.resume();
+
+            if(inviteCode) socket.emit('joinRoom', {roomId:inviteCode, username:myName});
+            else show('lobby-screen');
+        }
+
+        function show(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function createRoom() { let r=document.getElementById('room-name').value; if(r){ socket.emit('createRoom', {roomId:r, username:myName}); document.getElementById('create-modal').style.display='none'; } }
         function join(id) { socket.emit('joinRoom', {roomId:id, username:myName}); }
         function leave() { if(confirm("Çıkış?")) { socket.emit('leaveRoom'); location.href="/"; } }
@@ -370,18 +310,16 @@
 
         socket.on('roomList', l => {
             let d=document.getElementById('room-list'); d.innerHTML="";
-            if(l.length===0) d.innerHTML="<p style='color:#777;text-align:center'>Masa yok</p>";
+            if(l.length===0) d.innerHTML="<p style='color:#aaa;text-align:center'>Masa yok</p>";
             l.forEach(r => d.innerHTML+=`<div style="padding:15px; background:rgba(255,255,255,0.1); margin:5px; border-radius:10px; cursor:pointer; display:flex; justify-content:space-between;" onclick="join('${r.id}')"><b>${r.id}</b> <span>${r.count}/4</span></div>`);
         });
 
         socket.on('joined', d => {
             curRoom=d.roomId; myIdx=d.mySeat;
-            show('game-screen');
-            document.getElementById('game-ui').style.display='block';
+            show('game-screen'); document.getElementById('game-ui').style.display='block';
             document.getElementById('share-btn').style.display='flex';
             document.getElementById('admin-panel').style.display = d.isAdmin ? 'block' : 'none';
-            const url = `${window.location.origin}/?oda=${curRoom}`;
-            window.history.pushState({path:url},'',url);
+            window.history.pushState({path:`/?oda=${curRoom}`},'',`/?oda=${curRoom}`);
         });
 
         socket.on('updateRoom', r => render(r));
@@ -400,7 +338,7 @@
             let vBase = myIdx===-1?0:myIdx;
             draw(0, 'bottom', vBase, room); draw(1, 'right', vBase, room); draw(2, 'top', vBase, room); draw(3, 'left', vBase, room);
 
-            let c = document.querySelector('#center-zone div'); c.innerHTML="";
+            let c = document.getElementById('center-target'); c.innerHTML="";
             room.centerPile.forEach((card,i)=>{
                 let img=document.createElement('img'); img.src=getSrc(card.suit,card.value);
                 img.className='center-card'; img.style.transform=`rotate(${(i*10)%360}deg)`;
@@ -411,7 +349,7 @@
         function draw(offset, pos, vBase, room) {
             let actual = (vBase+offset)%4;
             let p = room.seats[actual];
-            let div = document.getElementById(`content-${pos}`);
+            let div = document.getElementById(pos === 'bottom' ? 'content-bottom' : `content-${pos}`);
             
             if(!room.gameStarted && p===null) { div.innerHTML=`<div class="empty-seat" onclick="sit(${actual})">+</div><div style="font-size:10px; color:#aaa; margin-top:5px;">Boş</div>`; return; }
             if(p===null) { div.innerHTML=""; return; }
@@ -421,30 +359,38 @@
 
             let handHtml=`<div style="height:50px; display:flex; justify-content:center; margin-top:5px;">`;
             if(actual===myIdx) {
+                handHtml=`<div id="my-hand">`;
                 p.hand.forEach((c,i)=>{
                    let clk = (room.gameStarted && room.turnIndex===actual) ? `onclick="play(this,${i})"` : "";
                    handHtml+=`<img src="${getSrc(c.suit,c.value)}" class="my-card" ${clk}>`;
                 });
+                handHtml+=`</div>`;
             } else {
                 for(let k=0; k<p.hand.length; k++) handHtml+=`<img src="/img/back_light.png" class="opponent-card">`;
+                handHtml+=`</div>`;
             }
-            handHtml+=`</div>`;
 
-            div.innerHTML = `
+            // KAMERA KUTUSU (SOLDA MI SAĞDA MI?)
+            // Alt taraf (benim) için kamera SOLDA, diğerleri için ÜSTTE
+            let camBox = `
                 <div class="player-box ${turnClass}" onclick="toggleMute('${p.id}','${pos}')">
                     <img src="${avatar}" onerror="this.src='/img/user_placeholder.png'">
                     <div class="player-name">${p.name}</div>
                     <div class="muted-icon">🔇</div>
-                </div>
-                ${handHtml}
-            `;
+                </div>`;
+            
+            div.innerHTML = camBox + handHtml;
         }
 
         function play(el, i) {
+            // ORTAYA UÇUŞ (DÜZELTİLDİ: #center-target BAZ ALINDI)
             let cl = el.cloneNode(true); cl.classList.add('flying-card'); cl.classList.remove('my-card');
-            let r = el.getBoundingClientRect(); let c = document.querySelector('#center-zone div').getBoundingClientRect();
+            let r = el.getBoundingClientRect(); 
+            let c = document.getElementById('center-target').getBoundingClientRect();
+            
             cl.style.left=r.left+'px'; cl.style.top=r.top+'px'; document.body.appendChild(cl);
             requestAnimationFrame(()=>{
+                // Tam merkeze git
                 let tx = c.left + (c.width/2) - (r.width/2);
                 let ty = c.top + (c.height/2) - (r.height/2);
                 cl.style.transform = `translate(${tx-r.left}px, ${ty-r.top}px) rotate(360deg)`;
@@ -458,8 +404,8 @@
             if(!lastState) return;
             let idx = parseInt(Object.keys(lastState.seats).find(k=>lastState.seats[k] && lastState.seats[k].id===d.id));
             if(!isNaN(idx)) {
-                let el = document.querySelector(`#content-${getPos(idx)} .player-box`);
-                if(el) d.isSpeaking ? el.classList.add('speaking') : el.classList.remove('speaking');
+                let el = document.querySelector(getPos(idx)==='bottom' ? `#content-bottom .player-box` : `#content-${getPos(idx)} .player-box`);
+                if(el) d.isSpeaking ? el.classList.add('mic-talking') : el.classList.remove('mic-talking');
             }
         });
 
