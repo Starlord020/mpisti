@@ -42,11 +42,11 @@
         .login-input { background: rgba(0, 0, 0, 0.4); border: 1px solid #2a5c35; padding: 15px; border-radius: 25px; color: white; text-align: center; font-size: 16px; width: 280px; margin-bottom: 15px; }
         .btn-main { background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%); border: none; padding: 15px 50px; border-radius: 30px; color: #3e2723; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 15px; box-shadow: 0 5px 15px rgba(241, 196, 15, 0.2); }
 
-        /* OYUN ALANI IZGARASI */
+        /* OYUN ALANI */
         #game-board { 
             display: grid; 
-            grid-template-columns: 100px 1fr 100px; 
-            grid-template-rows: 120px 1fr 160px; 
+            grid-template-columns: 80px 1fr 80px; 
+            grid-template-rows: 100px 1fr 140px; 
             width: 100%; height: 100%; padding: 5px; box-sizing: border-box; 
         }
         
@@ -56,28 +56,17 @@
         #seat-right { grid-column: 3; grid-row: 2; justify-content: flex-end; padding-right: 5px; }
         #seat-bottom { grid-column: 2; grid-row: 3; align-items: flex-end; padding-bottom: 10px; }
         
-        /* Seat content yapısı */
-        .seat-content { 
-            display: flex; 
-            flex-direction: column; /* Varsayılan: üst üste */
-            align-items: center; 
-            width: 100%;
-        }
-        
-        /* Masaüstü için alt koltuk yan yana */
-        #content-bottom { 
-            flex-direction: row; 
-            align-items: flex-end; 
-            justify-content: center; 
-            gap: 20px;
-        }
+        /* İÇERİK DÜZENİ */
+        .seat-content { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        /* Masaüstü alt taraf (Kamera + Kartlar) */
+        #content-bottom { display: flex; flex-direction: row; align-items: flex-end; gap: 20px; justify-content: center; }
 
         /* OYUNCU KUTUSU */
         .player-box {
             width: auto; min-width: 70px; height: 30px; 
             background: rgba(0, 0, 0, 0.6); border: 1px solid #555; border-radius: 15px; 
             display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; transition: border-color 0.2s; /* Sadece border animasyonu, boyut değil */
+            cursor: pointer; transition: border-color 0.2s; /* Sadece border animasyonu */
             padding: 0 10px; margin-bottom: 5px;
             position: relative; overflow: hidden;
         }
@@ -86,12 +75,8 @@
         
         /* KAMERA AÇIKKEN */
         .player-box.has-cam { background: #000; border-color: #777; padding: 0; }
-        
-        /* Ben (Alt) */
         #content-bottom .player-box.has-cam { width: 80px; height: 80px; border-radius: 10px; }
-        /* Rakipler (2 Kat Büyük) */
         .seat:not(#seat-bottom) .player-box.has-cam { width: 130px; height: 130px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 50; }
-        
         .player-box.has-cam .player-name { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); font-size: 10px; padding: 2px 0; }
         .player-box.has-cam img { display: block; }
 
@@ -100,7 +85,8 @@
         .turn-active { border-color: var(--gold); box-shadow: 0 0 10px var(--gold); }
 
         /* KARTLAR */
-        .hand-container { display: flex; justify-content: center; height: 60px; margin-top: 5px; }
+        .hand-container { display: flex; justify-content: center; height: 50px; } /* Kartlar için ayrı div */
+        
         .my-card { width: 110px; margin-left: -60px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); cursor: pointer; transition: transform 0.2s; }
         .my-card:first-child { margin-left: 0; }
         .my-card:hover { transform: translateY(-30px) scale(1.05); margin-right: 10px; z-index: 10; }
@@ -128,12 +114,11 @@
         .legal-link { color: var(--gold); text-decoration: underline; cursor: pointer; }
         canvas { display: none; }
 
-        /* --- MOBİL ÖZEL AYARLAR --- */
+        /* --- MOBİL DÜZELTMELERİ --- */
         @media (max-width: 600px) {
             #game-board { grid-template-columns: 60px 1fr 60px; grid-template-rows: 80px 1fr 140px; padding: 2px; }
             
-            .my-card { width: 90px; margin-left: -40px; } /* Kartlar daha az üst üste */
-            
+            .my-card { width: 90px; margin-left: -35px; }
             .center-card, .flying-card { width: 80px; }
             #center-target { width: 80px; height: 110px; }
             .seat:not(#seat-bottom) .player-box.has-cam { width: 90px; height: 90px; }
@@ -142,24 +127,23 @@
 
             /* MOBİLDE KAMERA SOL ALTA SABİT */
             #seat-bottom { display: block; padding: 0; }
-            #content-bottom { display: block; width: 100%; height: 100%; }
+            #content-bottom { display: block; text-align: center; width: 100%; height: 100%; position: relative; }
             
             #content-bottom .player-box {
                 position: fixed !important;
-                bottom: 10px !important;
-                left: 10px !important;
+                bottom: 15px !important;
+                left: 15px !important;
                 z-index: 100;
                 margin: 0;
             }
             
-            /* Kendi Kartlarımın Konumu */
             #content-bottom .hand-container {
                 position: absolute;
                 bottom: 10px;
                 left: 0;
                 width: 100%;
                 justify-content: center;
-                padding-left: 0;
+                padding-left: 60px; /* Kamera üstüne binmesin */
             }
         }
     </style>
@@ -279,7 +263,7 @@
                 navigator.mediaDevices.getUserMedia({audio:true}).then(s => {
                     localStream = s;
                     mediaRec = new MediaRecorder(s, {mimeType:'audio/webm;codecs=opus'});
-                    mediaRec.ondataavailable = e => { if(e.data.size>0 && curRoom) socket.emit("streamData", {roomId:curRoom, type:'audio', payload:e.data}); };
+                    mediaRec.ondataavailable = e => { if(e.data.size>0 && curRoom && !isMuted) socket.emit("streamData", {roomId:curRoom, type:'audio', payload:e.data}); };
                     mediaRec.start(200);
                     isMuted=false; document.getElementById('mic-btn').classList.add('active-btn');
                     socket.emit("speaking", {roomId:curRoom, isSpeaking:true});
@@ -325,6 +309,7 @@
         socket.on("streamData", d => {
             if(mutedUsers.has(d.id)) return;
             if(d.type==='audio') {
+                // DÜZELTME: isMuted kontrolü kaldırıldı. Sessiz olsam da duymalıyım.
                 const blob = new Blob([d.payload], {type: 'audio/webm;codecs=opus'});
                 const audio = new Audio(URL.createObjectURL(blob));
                 audio.play().then(() => { setTimeout(() => URL.revokeObjectURL(audio.src), 1000); }).catch(e=>{});
@@ -335,12 +320,9 @@
             }
         });
 
-        // KAMERA GÜNCELLEME (DOM SİLMEDEN)
+        // KAMERA GÜNCELLEME (FLICKER ÖNLEYİCİ)
         function updCam(pos, data) {
             let container = document.querySelector(pos==='bottom' ? '#content-bottom' : `#content-${pos}`);
-            if(!container) return;
-            
-            // Eğer player-box yoksa çizme (render fonksiyonu çizecek)
             let box = container.querySelector('.player-box');
             if(box) {
                 let img = box.querySelector('img');
@@ -351,8 +333,8 @@
 
         function toggleMute(id, pos) {
             if(id===socket.id) return;
-            if(mutedUsers.has(id)) { mutedUsers.delete(id); document.querySelector(`#content-${pos} .mic-icon`).style.display='none'; }
-            else { mutedUsers.add(id); let icon = document.querySelector(`#content-${pos} .mic-icon`); if(icon) { icon.style.display='block'; icon.innerText='🔇'; } }
+            if(mutedUsers.has(id)) { mutedUsers.delete(id); document.querySelector(pos==='bottom' ? '#content-bottom .mic-icon' : `#content-${pos} .mic-icon`).style.display='none'; }
+            else { mutedUsers.add(id); let icon = document.querySelector(pos==='bottom' ? '#content-bottom .mic-icon' : `#content-${pos} .mic-icon`); icon.style.display='block'; icon.innerText='🔇'; }
         }
 
         // --- GİRİŞ & OYUN ---
@@ -397,21 +379,17 @@
         });
         socket.on('matchOver', d => { show('result-screen'); document.getElementById('win-text').innerText=d.winner+" KAZANDI"; document.getElementById('res-a').innerText="A: "+d.scoreA; document.getElementById('res-b').innerText="B: "+d.scoreB; });
 
-        // AKILLI RENDER (DOM SİLMEDEN GÜNCELLEME)
         function render(room) {
             lastState = room;
             let vBase = myIdx===-1?0:myIdx;
-            
-            draw(0, 'bottom', vBase, room); 
-            draw(1, 'right', vBase, room); 
-            draw(2, 'top', vBase, room); 
-            draw(3, 'left', vBase, room);
+            draw(0, 'bottom', vBase, room); draw(1, 'right', vBase, room); draw(2, 'top', vBase, room); draw(3, 'left', vBase, room);
 
             let c = document.getElementById('center-target'); c.innerHTML="";
             room.centerPile.forEach((card,i)=>{
                 let img=document.createElement('img'); img.src=getSrc(card.suit,card.value);
                 img.className='center-card'; 
-                let rot = (i * 15) % 360; img.style.transform = `rotate(${rot}deg)`;
+                let rot = (i * 15) % 360; 
+                img.style.transform = `rotate(${rot}deg)`;
                 c.appendChild(img);
             });
         }
@@ -421,21 +399,16 @@
             let p = room.seats[actual];
             let container = document.getElementById(pos === 'bottom' ? 'content-bottom' : `content-${pos}`);
             
-            // Eğer koltuk boşsa ve oyun başlamadıysa -> Boş Koltuk Göster
-            if(!room.gameStarted && p===null) { 
-                container.innerHTML=`<div class="empty-seat" onclick="sit(${actual})">+</div><div style="font-size:10px; color:#aaa; margin-top:5px;">Boş</div>`; 
-                return; 
-            }
+            if(!room.gameStarted && p===null) { container.innerHTML=`<div class="empty-seat" onclick="sit(${actual})">+</div><div style="font-size:10px; color:#aaa; margin-top:5px;">Boş</div>`; return; }
             if(p===null) { container.innerHTML=""; return; }
 
-            // Oyuncu varsa: Sadece kartları ve isimleri güncelle, kutuyu silme
             let turnClass = (room.gameStarted && room.turnIndex===actual) ? 'turn-active' : '';
             let avatar = p.isBot ? "/img/bot_avatar.png" : "/img/user_placeholder.png";
 
-            // 1. OYUNCU KUTUSU (VARSA GÜNCELLE, YOKSA YARAT)
+            // DÜZELTME: KUTUYU YENİDEN YARATMA, VARSA GÜNCELLE
             let box = container.querySelector('.player-box');
             if(!box) {
-                // İlk defa yaratılıyor
+                // Yoksa yarat
                 let boxHTML = `
                 <div class="player-box ${turnClass}" onclick="toggleMute('${p.id}','${pos}')">
                     <img src="${avatar}" onerror="this.src='/img/user_placeholder.png'">
@@ -444,28 +417,28 @@
                 </div>
                 <div class="hand-container"></div>`;
                 container.innerHTML = boxHTML;
-                box = container.querySelector('.player-box'); // Referansı al
             } else {
-                // Zaten var, sadece class ve yazı güncelle
-                box.className = `player-box ${turnClass} ${box.classList.contains('has-cam') ? 'has-cam' : ''}`;
+                // Varsa sadece class ve yazı güncelle (resmi elleme)
+                // has-cam sınıfını korumak için kontrol et
+                let hasCam = box.classList.contains('has-cam');
+                box.className = `player-box ${turnClass} ${hasCam ? 'has-cam' : ''}`;
                 box.querySelector('.player-name').innerText = p.name;
-                // Resme dokunma (Kamera varsa bozulmasın)
             }
 
-            // 2. KARTLARI GÜNCELLE (HER SEFERİNDE YENİDEN ÇİZİLEBİLİR, SORUN YOK)
-            let handDiv = container.querySelector('.hand-container');
+            // KARTLARI GÜNCELLE
+            let handContainer = container.querySelector('.hand-container');
             let handHtml = "";
-            if(actual===myIdx) { // Benim kartlarım
-                handHtml = `<div id="my-hand">`;
+            if(actual===myIdx) {
+                handHtml=`<div id="my-hand">`;
                 p.hand.forEach((c,i)=>{
                    let clk = (room.gameStarted && room.turnIndex===actual) ? `onclick="play(this,${i})"` : "";
                    handHtml+=`<img src="${getSrc(c.suit,c.value)}" class="my-card" ${clk}>`;
                 });
-                handHtml += `</div>`;
-            } else { // Rakip kartları
+                handHtml+=`</div>`;
+            } else {
                 for(let k=0; k<p.hand.length; k++) handHtml+=`<img src="/img/back_light.png" class="opponent-card">`;
             }
-            handDiv.innerHTML = handHtml;
+            handContainer.innerHTML = handHtml;
         }
 
         function play(el, i) {
