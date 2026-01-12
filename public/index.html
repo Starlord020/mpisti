@@ -3,435 +3,330 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Süper Pişti Pro - Performans Modu</title>
+    <title>Süper Pişti Pro</title>
     <style>
         :root {
             --bg-dark: #0a2912;
             --bg-light: #1a5c2b;
             --gold-mid: #fccd4d;
-            --glass-bg: rgba(0, 0, 0, 0.7); /* Bulanıklık yerine koyu zemin (FPS için) */
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(0, 0, 0, 0.85);
+            --speaking-glow: #2ecc71; /* Yeşil Işık */
         }
 
         body {
             font-family: 'Segoe UI', sans-serif;
             background: radial-gradient(circle at center, var(--bg-light) 0%, var(--bg-dark) 100%);
             color: #eee;
-            margin: 0;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            user-select: none; /* Metin seçimini engelle (Performans) */
+            margin: 0; overflow: hidden; height: 100vh;
+            display: flex; flex-direction: column; user-select: none;
         }
 
-        /* EKRANLAR */
-        .screen { display: none; height: 100%; width: 100%; position: absolute; top: 0; left: 0; background: rgba(10, 41, 18, 0.95); z-index: 20; flex-direction: column; align-items: center; justify-content: center; }
+        .screen { display: none; height: 100%; width: 100%; position: absolute; top: 0; left: 0; background: rgba(10, 41, 18, 0.98); z-index: 20; flex-direction: column; align-items: center; justify-content: center; }
         .active { display: flex; }
 
-        /* OPTİMİZE EDİLMİŞ ANİMASYONLAR */
-        .flying-card { 
-            position: fixed; z-index: 9999; 
-            transition: transform 0.6s ease-out, opacity 0.6s ease-out; /* Sadece transform ve opacity */
-            pointer-events: none; 
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.5); /* Gölge hafifletildi */
-            margin: 0 !important; 
-            will-change: transform, opacity; /* GPU Hızlandırma */
+        /* YEŞİL KONUŞMA EFEKTİ */
+        @keyframes speakPulse {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); border-color: #2ecc71; }
+            50% { box-shadow: 0 0 20px 5px rgba(46, 204, 113, 0.4); transform: scale(1.05); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); border-color: #2ecc71; }
+        }
+        .speaking-box {
+            animation: speakPulse 1s infinite;
+            border: 2px solid var(--speaking-glow) !important;
+            background: rgba(46, 204, 113, 0.2) !important;
         }
 
-        /* GPU Kullanan Paneller (Blur kaldırıldı, şeffaflık azaltıldı) */
-        .glass-panel { 
-            background: var(--glass-bg); 
-            border-radius: 20px; padding: 25px; 
-            border: 1px solid var(--glass-border); 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
-        }
+        /* SARI SIRA EFEKTİ */
+        .active-turn-box { border: 2px solid var(--gold-mid) !important; box-shadow: 0 0 15px var(--gold-mid); }
 
-        /* OYUN ALANI */
-        #game-board { display: grid; grid-template-columns: 90px 1fr 90px; grid-template-rows: 1fr 2fr 1fr; width: 100%; height: 100%; padding: 10px; box-sizing: border-box; }
+        /* DİĞER CSS */
+        .info-box { background: rgba(0,0,0,0.8); padding: 5px 10px; border-radius: 8px; border: 1px solid #444; min-width: 80px; text-align: center; color: white; font-size: 12px; transition: all 0.2s; }
+        .flying-card { position: fixed; z-index: 9999; transition: transform 0.5s ease-out, opacity 0.5s; pointer-events: none; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); will-change: transform; margin: 0 !important; }
+        .glass-panel { background: var(--glass-bg); border-radius: 15px; padding: 20px; border: 1px solid #444; }
         
+        #game-board { display: grid; grid-template-columns: 80px 1fr 80px; grid-template-rows: 1fr 2fr 1fr; width: 100%; height: 100%; padding: 5px; }
         .seat { display: flex; align-items: center; justify-content: center; position: relative; }
-        #seat-top { grid-column: 2; grid-row: 1; }
-        #seat-left { grid-column: 1; grid-row: 2; }
-        #seat-right { grid-column: 3; grid-row: 2; }
-        #seat-bottom { grid-column: 2; grid-row: 3; align-items: flex-end; padding-bottom: 15px; }
+        #seat-top { grid-column: 2; grid-row: 1; } #seat-left { grid-column: 1; grid-row: 2; } #seat-right { grid-column: 3; grid-row: 2; } #seat-bottom { grid-column: 2; grid-row: 3; align-items: flex-end; }
+        .seat-content { display: flex; flex-direction: column; align-items: center; }
+        #seat-top .seat-content { transform: rotate(180deg); } #seat-left .seat-content { transform: rotate(90deg); } #seat-right .seat-content { transform: rotate(-90deg); }
 
-        .seat-content { display: flex; flex-direction: column; align-items: center; width: 100%; }
-        #seat-top .seat-content { transform: rotate(180deg); }
-        #seat-left .seat-content { transform: rotate(90deg); }
-        #seat-right .seat-content { transform: rotate(-90deg); }
-
-        /* KARTLAR */
-        .opponent-card { width: 40px; border-radius: 4px; border: 1px solid #ccc; margin-left: -25px; }
-        .opponent-card:first-child { margin-left: 0; }
-
-        #my-hand { display: flex; height: 150px; align-items: flex-end; justify-content: center; margin-bottom: 10px; }
-        .my-card { 
-            width: 110px; transition: transform 0.2s; 
-            margin-left: -40px; border-radius: 8px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4); 
-            will-change: transform;
-        }
+        .my-card { width: 100px; margin-left: -45px; border-radius: 6px; box-shadow: 0 2px 8px #000; transition: transform 0.1s; }
         .my-card:first-child { margin-left: 0; }
-        .my-turn .my-card:hover { transform: translateY(-30px); z-index: 20; }
+        .my-turn .my-card:hover { transform: translateY(-20px); z-index: 20; }
+        .opponent-card { width: 35px; border-radius: 3px; border: 1px solid #999; margin-left: -22px; }
+        .center-card { width: 90px; position: absolute; border-radius: 6px; box-shadow: 2px 2px 5px #000; }
         
-        .center-card { width: 100px; position: absolute; transition: transform 0.4s; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); will-change: transform; }
-
-        /* DİĞER BİLEŞENLER */
-        .info-box { background: rgba(0,0,0,0.8); padding: 5px 10px; border-radius: 10px; border: 1px solid #555; min-width: 70px; text-align: center; color: white; font-size: 12px; }
-        .active-turn-box { border: 2px solid var(--gold-mid); box-shadow: 0 0 10px var(--gold-mid); }
-        
-        input { padding: 12px; margin: 10px; border-radius: 20px; border: 1px solid #555; background: #222; color: white; text-align: center; font-size: 16px; }
-        button { padding: 12px 25px; margin: 5px; border-radius: 20px; border: none; cursor: pointer; background: var(--gold-mid); color: #000; font-weight: bold; }
-        .btn-green { background: #27ae60; color: white; }
-        .btn-red { background: #c0392b; color: white; }
-        
+        #my-hand { display: flex; height: 140px; align-items: flex-end; justify-content: center; }
         #center-zone { grid-column: 2; grid-row: 2; display: flex; justify-content: center; align-items: center; position: relative; }
-        #center-zone div { border: 2px dashed rgba(255,255,255,0.2); width: 100px; height: 140px; border-radius: 8px; }
+        #center-zone div { border: 2px dashed #555; width: 90px; height: 130px; border-radius: 8px; }
 
-        /* MODALLAR */
-        #create-modal, #result-modal, #terms-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 50; display: none; align-items: center; justify-content: center; }
-        .modal-content { width: 300px; padding: 20px; background: #222; border: 1px solid var(--gold-mid); border-radius: 10px; text-align: center; }
+        input { padding: 12px; margin: 10px; border-radius: 20px; border: 1px solid #555; background: #222; color: white; text-align: center; }
+        button { padding: 12px 20px; margin: 5px; border-radius: 20px; border: none; cursor: pointer; background: var(--gold-mid); font-weight: bold; }
+        .btn-red { background: #c0392b; color: white; } .btn-green { background: #27ae60; color: white; }
         
-        /* MOBİL */
+        #mic-btn, #fs-btn { position: absolute; top: 10px; width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; z-index: 100; font-size: 20px; background: rgba(0,0,0,0.5); color: white; }
+        #mic-btn { right: 60px; } #fs-btn { right: 10px; }
+        .mic-on { background: #e74c3c !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 50% { opacity: 0.6; } }
+        
         @media (max-width: 600px) {
-            #game-board { grid-template-columns: 60px 1fr 60px; padding: 2px; }
-            .my-card { width: 80px; margin-left: -35px; } 
-            .center-card { width: 75px; }
-            .opponent-card { width: 30px; margin-left: -20px; }
+            #game-board { grid-template-columns: 50px 1fr 50px; }
+            .my-card { width: 75px; margin-left: -30px; } .center-card { width: 70px; } .opponent-card { width: 25px; margin-left: -15px; }
         }
-        
-        /* MİKROFON BUTONU */
-        .top-btn { position: absolute; top: 10px; width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; z-index: 100; font-size: 20px; background: rgba(0,0,0,0.5); color: white; }
-        #mic-btn { right: 60px; } #fullscreen-btn { right: 10px; }
-        .mic-active { background: #e74c3c !important; box-shadow: 0 0 10px #e74c3c; }
     </style>
 </head>
 <body>
-
-    <button id="fullscreen-btn" class="top-btn" onclick="toggleFullScreen()">⛶</button>
-    <button id="mic-btn" class="top-btn" onclick="toggleMic()">🎤</button>
+    <button id="fs-btn" onclick="toggleFS()">⛶</button>
+    <button id="mic-btn" onclick="toggleMic()">🎤</button>
 
     <div id="login-screen" class="screen active">
         <h1 style="color:var(--gold-mid);">♠ PİŞTİ PRO ♦</h1>
         <input type="text" id="username" placeholder="Oyuncu Adı">
-        <div style="font-size:12px; color:#ccc; margin:10px; text-align:left;">
-            <label><input type="checkbox" id="check-age"> 18+ yaşındayım.</label><br>
-            <label><input type="checkbox" id="check-terms"> <u onclick="document.getElementById('terms-modal').style.display='flex'">Kuralları</u> kabul ediyorum.</label>
+        <div style="color:#ccc; font-size:12px; text-align:left; margin:10px;">
+            <label><input type="checkbox" id="chk-age"> 18+ yaşındayım.</label><br>
+            <label><input type="checkbox" id="chk-terms"> Kuralları kabul ediyorum.</label>
         </div>
-        <button onclick="enterLobby()">GİRİŞ YAP</button>
-    </div>
-
-    <div id="terms-modal">
-        <div class="modal-content">
-            <h3>Kurallar</h3>
-            <p style="font-size:12px; text-align:left;">1. Küfür yasaktır.<br>2. Gerçek para ile oynanmaz.<br>3. Verileriniz korunur.</p>
-            <button onclick="document.getElementById('terms-modal').style.display='none'">KAPAT</button>
-        </div>
+        <button onclick="login()">GİRİŞ YAP</button>
     </div>
 
     <div id="lobby-screen" class="screen">
         <div class="glass-panel" style="width:90%; max-width:500px; height:80%; display:flex; flex-direction:column;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <h2>MASALAR</h2>
-                <button class="btn-green" onclick="document.getElementById('create-modal').style.display='flex'">+ MASA</button>
-            </div>
-            <div id="room-list-area" style="flex:1; overflow-y:auto;"></div>
+            <div style="display:flex; justify-content:space-between;"><h2>MASALAR</h2><button class="btn-green" onclick="showCreate()">+ MASA</button></div>
+            <div id="room-list" style="flex:1; overflow-y:auto; margin-top:10px;"></div>
         </div>
     </div>
 
-    <div id="create-modal">
-        <div class="modal-content">
-            <h3>Masa Adı</h3>
-            <input type="text" id="new-room-name">
-            <button class="btn-green" onclick="createRoomConfirm()">OLUŞTUR</button>
-            <button class="btn-red" onclick="document.getElementById('create-modal').style.display='none'">İPTAL</button>
-        </div>
-    </div>
-
-    <div id="waiting-screen" class="screen">
-        <button class="btn-red" style="position:absolute; top:10px; left:10px;" onclick="leaveRoom()">ÇIK</button>
-        <h2 id="room-name-display" style="color:var(--gold-mid)">...</h2>
-        <div id="player-list"></div>
-        <div id="admin-controls" style="display:none; margin-top:20px;">
-            <button onclick="addBot()">+ BOT</button>
-            <button class="btn-green" onclick="startGame()">BAŞLAT</button>
+    <div id="create-modal" class="screen" style="background:rgba(0,0,0,0.9);">
+        <div class="glass-panel" style="text-align:center;">
+            <h3>Masa Adı</h3><input type="text" id="room-name">
+            <br><button class="btn-green" onclick="createRoom()">OLUŞTUR</button><button class="btn-red" onclick="closeCreate()">İPTAL</button>
         </div>
     </div>
 
     <div id="game-screen" class="screen" style="background:transparent;">
-        <button class="btn-red" style="position:absolute; top:10px; left:10px; z-index:100; padding:5px 10px;" onclick="leaveRoom()">🚪</button>
-        <div id="notification-overlay" style="display:none; position:fixed; top:40%; background:rgba(0,0,0,0.9); padding:20px; border-radius:10px; z-index:100;">TUR BİTTİ</div>
+        <button class="btn-red" style="position:absolute; top:10px; left:10px; z-index:100; padding:5px 10px;" onclick="leave()">🚪</button>
+        <div id="notif" style="display:none; position:fixed; top:40%; background:rgba(0,0,0,0.9); padding:20px; border-radius:10px; z-index:100; color:gold;">TUR BİTTİ</div>
 
         <div id="game-board">
-            <div id="seat-top" class="seat"><div class="seat-content"><div class="info-box"><span id="name-top">...</span> <span id="mic-top">🔊</span></div><div id="hand-top" class="hand-container"></div></div></div>
-            <div id="seat-left" class="seat"><div class="seat-content"><div class="info-box"><span id="name-left">...</span> <span id="mic-left">🔊</span></div><div id="hand-left" class="hand-container"></div></div></div>
+            <div id="seat-top" class="seat"><div class="seat-content"><div class="info-box"><span id="name-top">...</span></div><div id="hand-top"></div></div></div>
+            <div id="seat-left" class="seat"><div class="seat-content"><div class="info-box"><span id="name-left">...</span></div><div id="hand-left"></div></div></div>
             <div id="center-zone"><div></div></div>
-            <div id="seat-right" class="seat"><div class="seat-content"><div class="info-box"><span id="name-right">...</span> <span id="mic-right">🔊</span></div><div id="hand-right" class="hand-container"></div></div></div>
+            <div id="seat-right" class="seat"><div class="seat-content"><div class="info-box"><span id="name-right">...</span></div><div id="hand-right"></div></div></div>
             <div id="seat-bottom" class="seat">
                 <div class="seat-content">
                     <div id="my-hand"></div>
                     <div class="info-box" style="min-width:150px; margin-top:5px;">
-                        <div style="font-weight:bold; color:var(--gold-mid); font-size:14px;">BEN</div>
-                        <div id="turn-msg" style="font-size:11px; margin:2px;">...</div>
+                        <div style="font-weight:bold; color:var(--gold-mid);">BEN</div>
+                        <div id="turn-msg" style="font-size:11px;">...</div>
                         <div style="display:flex; justify-content:space-between; font-size:11px;">
-                            <span id="score-text-a" style="color:#3498db">A: 0</span>
-                            <span id="score-text-b" style="color:#e74c3c">B: 0</span>
+                            <span id="score-a" style="color:#3498db">A: 0</span><span id="score-b" style="color:#e74c3c">B: 0</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <div id="waiting-overlay" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; background:rgba(0,0,0,0.8); padding:20px; border-radius:10px; display:none;">
+            <h3>Oyuncu Bekleniyor...</h3>
+            <div id="admin-panel" style="display:none;"><button onclick="addBot()">+ BOT</button><button class="btn-green" onclick="startGame()">BAŞLAT</button></div>
+        </div>
     </div>
 
-    <div id="result-modal">
-        <div class="modal-content">
-            <h1 id="winner-text" style="color:var(--gold-mid)">KAZANDINIZ</h1>
-            <p id="team-a-result">A: 0</p>
-            <p id="team-b-result">B: 0</p>
-            <button class="btn-green" onclick="leaveRoom()">TAMAM</button>
+    <div id="result-screen" class="screen">
+        <div class="glass-panel" style="text-align:center;">
+            <h1 id="win-text" style="color:gold;">SONUÇ</h1>
+            <p id="res-a">A: 0</p><p id="res-b">B: 0</p>
+            <button class="btn-green" onclick="leave()">ÇIKIŞ</button>
         </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        let currentRoom = "";
-        let myIndex = -1;
-        let myUsername = "";
-        let localStream = null;
-        let mediaRecorder = null;
-        let isMuted = true;
-        let lastRoomState = null;
+        let curRoom="", myIdx=-1, myName="", audioCtx, mediaRec, isMuted=true;
+        let lastState = null;
 
-        // --- OPTİMİZE EDİLMİŞ GÖRSEL FONKSİYONLAR ---
-        function getCardSrc(suit, value) {
-            let suitName = {'♥':'hearts', '♦':'diamonds', '♣':'clubs', '♠':'spades'}[suit];
-            return `/img/${suitName}_${value}.png`;
-        }
+        // --- GÖRSEL ---
+        function getSrc(s,v) { return `/img/${{'♥':'hearts','♦':'diamonds','♣':'clubs','♠':'spades'}[s]}_${v}.png`; }
+        function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
 
-        // --- SES SİSTEMİ (PERFORMANS İYİLEŞTİRMELİ) ---
+        // --- SES SİSTEMİ (WEB AUDIO API) ---
+        function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }
+        
         async function toggleMic() {
+            initAudio();
             const btn = document.getElementById('mic-btn');
-            if (isMuted) {
+            if(isMuted) {
                 try {
-                    // Kullanıcı etkileşimi ile AudioContext kilidini aç
-                    if (location.protocol !== 'https:' && location.hostname !== 'localhost') { 
-                        alert("Mikrofon için HTTPS gereklidir."); return; 
-                    }
-                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(localStream);
-                    
-                    mediaRecorder.ondataavailable = (event) => {
-                        if (event.data.size > 0 && currentRoom) { 
-                            socket.emit("voice", { roomId: currentRoom, blob: event.data }); 
-                        }
-                    };
-                    mediaRecorder.start(100); // 100ms'de bir gönder
-                    isMuted = false; 
-                    btn.classList.add('mic-active');
-                    socket.emit("speaking", { roomId: currentRoom, isSpeaking: true });
-                } catch (err) { alert("Mikrofon hatası: " + err.message); }
+                    if(location.protocol!=='https:' && location.hostname!=='localhost') { alert("HTTPS Gerekli!"); return; }
+                    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+                    mediaRec = new MediaRecorder(stream, {mimeType:'audio/webm;codecs=opus'});
+                    mediaRec.ondataavailable = e => { if(e.data.size>0 && curRoom) socket.emit("voice", {roomId:curRoom, blob:e.data}); };
+                    mediaRec.start(200); 
+                    isMuted=false; btn.classList.add('mic-on');
+                    socket.emit("speaking", {roomId:curRoom, isSpeaking:true});
+                } catch(e) { alert(e); }
             } else {
-                if (mediaRecorder) mediaRecorder.stop();
-                if (localStream) localStream.getTracks().forEach(track => track.stop());
-                isMuted = true; 
-                btn.classList.remove('mic-active');
-                socket.emit("speaking", { roomId: currentRoom, isSpeaking: false });
+                if(mediaRec) mediaRec.stop();
+                isMuted=true; btn.classList.remove('mic-on');
+                socket.emit("speaking", {roomId:curRoom, isSpeaking:false});
             }
         }
 
-        socket.on("voice", (blob) => {
-            if(isMuted) return; // Kendi sesini duyma veya kapalıysa çalma
-            
-            // FPS DROP ÇÖZÜMÜ: Oynat ve hemen HAFIZADAN SİL
-            const audioUrl = URL.createObjectURL(new Blob([blob], { type: 'audio/webm' }));
-            const audio = new Audio(audioUrl);
-            audio.play().then(() => {
-                // Ses çalmaya başlayınca hafızayı temizle (Hemen değil, biraz bekleyip)
-                // Amaç: Tarayıcının RAM'ini şişirmemek.
-            }).catch(e => {
-                // Otomatik oynatma hatası olursa yoksay
-            });
-            
-            // Ses bittiğinde veya 1 saniye sonra URL'yi iptal et
-            audio.onended = () => URL.revokeObjectURL(audioUrl);
-            setTimeout(() => URL.revokeObjectURL(audioUrl), 2000); 
+        socket.on("voice", async (blob) => {
+            if(isMuted) return;
+            initAudio();
+            try {
+                const buf = await blob.arrayBuffer();
+                const aud = await audioCtx.decodeAudioData(buf);
+                const src = audioCtx.createBufferSource();
+                src.buffer = aud; src.connect(audioCtx.destination); src.start(0);
+            } catch(e){}
         });
 
         socket.on("playerSpeaking", (data) => {
-            if(!lastRoomState) return;
-            let pIdx = lastRoomState.players.findIndex(p => p.id === data.id);
-            if(pIdx === -1) return;
-            let pos = getSeatPos(pIdx, lastRoomState.players.length);
-            let icon = document.getElementById(`mic-${pos}`);
-            if(icon) icon.style.opacity = data.isSpeaking ? '1' : '0.2';
+            if(!lastState) return;
+            let p = lastState.players.find(x => x.id === data.id);
+            if(!p) return;
+            let idx = lastState.players.indexOf(p);
+            let pos = getPos(idx, lastState.players.length);
+            
+            // Konuşanın kutusuna YEŞİL efekt ver
+            let box = document.querySelector(`#seat-${pos} .info-box`);
+            if(data.isSpeaking) box.classList.add('speaking-box');
+            else box.classList.remove('speaking-box');
         });
 
-        // --- OYUN MANTIĞI ---
-        function enterLobby() {
+        // --- OYUN AKIŞI ---
+        function login() {
             let u = document.getElementById('username').value;
-            if(!u || !document.getElementById('check-age').checked || !document.getElementById('check-terms').checked) {
-                alert("Lütfen ismi girin ve kuralları onaylayın."); return;
-            }
-            myUsername = u;
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('lobby-screen').classList.add('active');
+            if(!u || !document.getElementById('chk-age').checked) { alert("Eksik bilgi!"); return; }
+            myName = u;
+            show('lobby-screen');
+            initAudio(); // Kilidi aç
         }
-
-        function createRoomConfirm() {
-            let r = document.getElementById('new-room-name').value;
-            if(r) { socket.emit('createRoom', {roomId: r, username: myUsername}); document.getElementById('create-modal').style.display='none'; }
-        }
-
-        function joinRoom(id) { socket.emit('joinRoom', {roomId: id, username: myUsername}); }
-        function leaveRoom() { 
-            if(confirm("Çıkmak istiyor musunuz?")) { 
-                socket.emit('leaveRoom'); 
-                location.reload(); 
-            } 
-        }
-        function addBot() { socket.emit('addBot', currentRoom); }
-        function startGame() { socket.emit('startGame', currentRoom); }
+        function show(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        function showCreate() { document.getElementById('create-modal').classList.add('active'); }
+        function closeCreate() { document.getElementById('create-modal').classList.remove('active'); }
         
-        // --- SOCKET EVENTLERİ ---
+        function createRoom() {
+            let r = document.getElementById('room-name').value;
+            if(r) { socket.emit('createRoom', {roomId:r, username:myName}); closeCreate(); }
+        }
+        function join(id) { socket.emit('joinRoom', {roomId:id, username:myName}); }
+        function leave() { if(confirm("Çıkış?")) { socket.emit('leaveRoom'); location.reload(); } }
+        function addBot() { socket.emit('addBot', curRoom); }
+        function startGame() { socket.emit('startGame', curRoom); }
+
+        // --- SOCKET ---
         socket.on('roomList', list => {
-            let area = document.getElementById('room-list-area'); area.innerHTML = "";
+            let d = document.getElementById('room-list'); d.innerHTML="";
             list.forEach(r => {
-                let div = document.createElement('div');
-                div.style.padding = "10px"; div.style.margin = "5px"; div.style.background = "rgba(255,255,255,0.1)"; div.style.cursor = "pointer";
-                div.innerText = `${r.id} (${r.count}/4) - ${r.status}`;
-                div.onclick = () => joinRoom(r.id);
-                area.appendChild(div);
+                d.innerHTML += `<div style="padding:10px; background:rgba(255,255,255,0.1); margin:5px; cursor:pointer;" onclick="join('${r.id}')"><b>${r.id}</b> (${r.count}/4)</div>`;
             });
         });
 
-        socket.on('joined', data => {
-            currentRoom = data.roomId; myIndex = data.myIndex;
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('waiting-screen').classList.add('active');
-            document.getElementById('room-name-display').innerText = currentRoom;
-            document.getElementById('admin-controls').style.display = data.isAdmin ? 'block' : 'none';
+        socket.on('joined', d => {
+            curRoom = d.roomId; myIdx = d.myIndex;
+            show('game-screen');
+            document.getElementById('waiting-overlay').style.display='block';
+            if(d.isAdmin) document.getElementById('admin-panel').style.display='block';
         });
 
-        socket.on('updateRoom', room => {
-            let list = document.getElementById('player-list'); list.innerHTML = "";
-            room.players.forEach(p => list.innerHTML += `<div>${p.name}</div>`);
-            if(room.admin === socket.id) document.getElementById('admin-controls').style.display = 'block';
+        socket.on('updateRoom', r => {
+            // Bekleme ekranı listesi (basit)
+            // Oyuna başlayınca burası gizleniyor
         });
 
-        socket.on('gameStarted', room => {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('game-screen').classList.add('active');
-            renderGame(room);
+        socket.on('gameStarted', r => {
+            document.getElementById('waiting-overlay').style.display='none';
+            render(r);
+        });
+        socket.on('updateGame', r => render(r));
+        socket.on('roundOver', () => { document.getElementById('notif').style.display='block'; setTimeout(()=>document.getElementById('notif').style.display='none',2000); });
+        socket.on('matchOver', d => {
+            show('result-screen');
+            document.getElementById('win-text').innerText = d.winner + " KAZANDI!";
+            document.getElementById('res-a').innerText = "A: "+d.scoreA; document.getElementById('res-b').innerText = "B: "+d.scoreB;
         });
 
-        socket.on('updateGame', room => renderGame(room));
-        socket.on('roundOver', () => {
-            let n = document.getElementById('notification-overlay');
-            n.style.display = 'block'; setTimeout(() => n.style.display='none', 2000);
-        });
-        socket.on('matchOver', data => {
-            document.getElementById('result-modal').style.display = 'flex';
-            document.getElementById('team-a-result').innerText = `Takım A: ${data.scoreA}`;
-            document.getElementById('team-b-result').innerText = `Takım B: ${data.scoreB}`;
-        });
-
-        // --- RENDER (PERFORMANS İÇİN BASİTLEŞTİRİLDİ) ---
-        function renderGame(room) {
-            lastRoomState = room;
-            let self = room.players[myIndex];
-            let isTurn = room.turnIndex === myIndex;
-
-            document.getElementById('turn-msg').innerText = isTurn ? "SIRA SENDE" : "BEKLENİYOR";
-            document.getElementById('turn-msg').style.color = isTurn ? "#2ecc71" : "#777";
+        function render(room) {
+            lastState = room;
+            let self = room.players[myIdx];
+            let turn = room.turnIndex === myIdx;
             
-            // Sıra kimdeyse kutusunu yak (CSS class ile)
-            ['top','left','right','bottom'].forEach(pos => document.querySelector(`#seat-${pos} .info-box`).classList.remove('active-turn-box'));
-            
-            if (room.players.length === 4) {
-                 updateSeat('right', room.players[(myIndex+1)%4], room.turnIndex === (myIndex+1)%4);
-                 updateSeat('top', room.players[(myIndex+2)%4], room.turnIndex === (myIndex+2)%4);
-                 updateSeat('left', room.players[(myIndex+3)%4], room.turnIndex === (myIndex+3)%4);
+            document.getElementById('turn-msg').innerText = turn ? "SIRA SENDE" : "BEKLENİYOR";
+            document.getElementById('turn-msg').style.color = turn ? "#2ecc71" : "#777";
+            document.getElementById('score-a').innerText = `A: ${room.totalScoreA}`;
+            document.getElementById('score-b').innerText = `B: ${room.totalScoreB}`;
+
+            // SIRA KİMDEYSE SARI YAK
+            ['top','left','right','bottom'].forEach(p => {
+                let el = document.querySelector(`#seat-${p} .info-box`);
+                el.classList.remove('active-turn-box');
+            });
+
+            if(room.players.length===4) {
+                updSeat('right', room.players[(myIdx+1)%4], room.turnIndex===(myIdx+1)%4);
+                updSeat('top', room.players[(myIdx+2)%4], room.turnIndex===(myIdx+2)%4);
+                updSeat('left', room.players[(myIdx+3)%4], room.turnIndex===(myIdx+3)%4);
             } else {
-                 updateSeat('top', room.players[(myIndex+1)%2], room.turnIndex === (myIndex+1)%2);
+                updSeat('top', room.players[(myIdx+1)%2], room.turnIndex===(myIdx+1)%2);
             }
-            
-            // Kendi kutun
+
             let myBox = document.querySelector('#seat-bottom .info-box');
-            if(isTurn) myBox.classList.add('active-turn-box');
+            if(turn) myBox.classList.add('active-turn-box');
 
-            // Skorlar
-            document.getElementById('score-text-a').innerText = `A: ${room.totalScoreA}`;
-            document.getElementById('score-text-b').innerText = `B: ${room.totalScoreB}`;
-
-            // Kartlar
-            let handDiv = document.getElementById('my-hand'); handDiv.innerHTML = "";
-            if(isTurn) handDiv.classList.add('my-turn'); else handDiv.classList.remove('my-turn');
-            
-            self.hand.forEach((c, i) => {
-                let img = document.createElement('img');
-                img.src = getCardSrc(c.suit, c.value);
-                img.className = 'my-card';
-                if(isTurn) img.onclick = () => { animateThrow(img); socket.emit('playCard', {roomId: currentRoom, cardIndex: i}); };
-                handDiv.appendChild(img);
+            // ELİM
+            let h = document.getElementById('my-hand'); h.innerHTML="";
+            if(turn) h.classList.add('my-turn'); else h.classList.remove('my-turn');
+            self.hand.forEach((c,i) => {
+                let img = document.createElement('img'); img.src = getSrc(c.suit,c.value); img.className='my-card';
+                if(turn) img.onclick = () => { anim(img); socket.emit('playCard', {roomId:curRoom, cardIndex:i}); };
+                h.appendChild(img);
             });
 
-            // Orta
-            let centerDiv = document.querySelector('#center-zone div'); centerDiv.innerHTML = "";
-            room.centerPile.forEach((c, i) => {
-                let img = document.createElement('img');
-                img.src = getCardSrc(c.suit, c.value);
-                img.className = 'center-card';
-                // Dönme efektini CSS transform ile yap (Daha hızlı)
-                img.style.transform = `rotate(${(i*10)%360}deg)`;
-                centerDiv.appendChild(img);
+            // ORTA
+            let cen = document.querySelector('#center-zone div'); cen.innerHTML="";
+            room.centerPile.forEach((c,i) => {
+                let img = document.createElement('img'); img.src = getSrc(c.suit,c.value); img.className='center-card';
+                img.style.transform=`rotate(${(i*15)%360}deg)`;
+                cen.appendChild(img);
             });
         }
 
-        function updateSeat(pos, player, isTurn) {
-            if(!player) return;
-            document.getElementById(`name-${pos}`).innerText = player.name;
+        function updSeat(pos, p, isTurn) {
+            if(!p) return;
+            document.getElementById(`name-${pos}`).innerText = p.name;
             let box = document.querySelector(`#seat-${pos} .info-box`);
             if(isTurn) box.classList.add('active-turn-box');
             
-            let hand = document.getElementById(`hand-${pos}`); hand.innerHTML = "";
-            for(let i=0; i<player.hand.length; i++) {
-                let img = document.createElement('img'); img.src = "/img/back_light.png";
-                img.className = 'opponent-card';
-                hand.appendChild(img);
+            let h = document.getElementById(`hand-${pos}`); h.innerHTML="";
+            for(let i=0; i<p.hand.length; i++) {
+                let img = document.createElement('img'); img.src="/img/back_light.png"; img.className='opponent-card';
+                h.appendChild(img);
             }
         }
 
-        function animateThrow(cardEl) {
-            let clone = cardEl.cloneNode(true);
-            clone.classList.add('flying-card');
-            let rect = cardEl.getBoundingClientRect();
-            let centerRect = document.getElementById('center-zone').getBoundingClientRect();
-            
-            clone.style.left = rect.left + 'px';
-            clone.style.top = rect.top + 'px';
-            document.body.appendChild(clone);
-            
-            // Bir sonraki frame'de hedef konuma git (CSS transition halleder)
-            requestAnimationFrame(() => {
-                clone.style.transform = `translate(${centerRect.left - rect.left + 20}px, ${centerRect.top - rect.top + 20}px) rotate(360deg) scale(0.8)`;
-                clone.style.opacity = '0';
+        function anim(el) {
+            let cl = el.cloneNode(true); cl.classList.add('flying-card');
+            let r = el.getBoundingClientRect();
+            let c = document.getElementById('center-zone').getBoundingClientRect();
+            cl.style.left=r.left+'px'; cl.style.top=r.top+'px';
+            document.body.appendChild(cl);
+            requestAnimationFrame(()=>{
+                cl.style.transform = `translate(${c.left-r.left+10}px, ${c.top-r.top+10}px) rotate(360deg) scale(0.8)`;
+                cl.style.opacity='0';
             });
-            setTimeout(() => clone.remove(), 600);
+            setTimeout(()=>cl.remove(), 500);
         }
 
-        function getSeatPos(pIndex, total) {
-            if(pIndex === myIndex) return 'self';
-            if(total === 2) return 'top';
-            if(pIndex === (myIndex+1)%4) return 'right';
-            if(pIndex === (myIndex+2)%4) return 'top';
+        function getPos(idx, total) {
+            if(idx===myIdx) return 'self';
+            if(total===2) return 'top';
+            if(idx===(myIdx+1)%4) return 'right';
+            if(idx===(myIdx+2)%4) return 'top';
             return 'left';
-        }
-        
-        function toggleFullScreen() {
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else if (document.exitFullscreen) document.exitFullscreen();
         }
     </script>
 </body>
