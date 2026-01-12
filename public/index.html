@@ -9,174 +9,142 @@
             --bg-dark: #051c0b;
             --bg-light: #0d3b16;
             --gold: #f1c40f;
-            --glass: rgba(0, 0, 0, 0.85);
+            --glass: rgba(0, 0, 0, 0.9);
         }
         
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: radial-gradient(circle at center, var(--bg-light) 0%, var(--bg-dark) 100%); 
-            margin: 0; overflow: hidden; height: 100vh; color: white; user-select: none; 
-            /* Mobilde kaydırmayı engelle */
-            position: fixed; width: 100%;
+        html, body {
+            width: 100%; height: 100%; margin: 0; padding: 0;
+            background: radial-gradient(circle at center, var(--bg-light) 0%, var(--bg-dark) 100%);
+            background-color: var(--bg-dark); /* Yüklenirken beyaz kalmaması için */
+            font-family: 'Segoe UI', sans-serif;
+            color: white; user-select: none; overflow: hidden;
         }
         
-        .screen { display: none; height: 100%; width: 100%; position: absolute; top: 0; left: 0; background: var(--bg-dark); z-index: 20; flex-direction: column; align-items: center; justify-content: center; }
+        .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 20; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, var(--bg-light) 0%, var(--bg-dark) 100%); }
         .active { display: flex; }
 
-        /* GİRİŞ EKRANI */
-        #login-screen { background: radial-gradient(circle, #0f3f1a 0%, #031106 100%); }
-        .logo-text { font-size: 3rem; color: var(--gold); font-weight: bold; text-shadow: 0 4px 10px rgba(0,0,0,0.6); margin: 0; }
-        .login-input { background: rgba(0, 0, 0, 0.3); border: 1px solid #2a5c35; padding: 15px; border-radius: 25px; color: white; text-align: center; font-size: 16px; width: 280px; }
-        .btn-main { background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%); border: none; padding: 15px 50px; border-radius: 30px; color: #3e2723; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 25px; }
-
-        /* --- YENİ BUTON SİSTEMİ (MOBİL MENÜLÜ) --- */
-        /* Genel buton stili */
-        .menu-btn { 
-            width: 40px; height: 40px; border-radius: 50%; border: 1px solid #555; 
-            cursor: pointer; font-size: 18px; background: rgba(0,0,0,0.6); color: white; 
-            display: flex; align-items: center; justify-content: center; transition: 0.3s;
-            margin-bottom: 8px; /* Menü içindeki boşluk */
-        }
-        .active-btn { background: #2ecc71 !important; box-shadow: 0 0 10px #2ecc71; border-color: #2ecc71; }
-        .mic-talking { border-color: #2ecc71 !important; box-shadow: 0 0 15px #2ecc71; }
-
-        /* Sol Üst Sabit Çıkış Butonu */
-        #left-exit-container { position: fixed; top: 10px; left: 10px; z-index: 200; }
-        #leave-btn { background: #c0392b; border-color: #e74c3c; margin:0;}
-
-        /* Sağ Üst Menü Alanı */
-        #right-menu-container { position: fixed; top: 10px; right: 10px; z-index: 200; display: flex; flex-direction: column; align-items: flex-end; }
+        /* --- MENÜ SİSTEMİ (PC & MOBİL ORTAK) --- */
+        #menu-container { position: fixed; top: 15px; right: 15px; z-index: 200; display: flex; flex-direction: column; align-items: flex-end; }
         
-        /* Menü Açma Butonu (Hamburger) */
-        #mobile-menu-toggle { display: none; font-size: 24px; z-index: 201; } /* Mobilde görünecek */
-
-        /* Gizlenecek Butonların Kapsayıcısı */
-        #hidden-buttons-wrapper {
-            display: flex;
-            flex-direction: column; /* Masaüstünde de dikey olsun, sağa yaslı */
-            gap: 5px;
+        .menu-btn { 
+            width: 45px; height: 45px; border-radius: 50%; border: 1px solid #555; 
+            cursor: pointer; font-size: 20px; background: rgba(0,0,0,0.6); color: white; 
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+            margin-bottom: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        #share-btn { background: #3498db; border-color:#2980b9; }
+        .menu-btn:active { transform: scale(0.95); }
+        
+        #hidden-menu { display: none; flex-direction: column; margin-top: 5px; }
+        .menu-open #hidden-menu { display: flex; }
+        
+        .active-btn { background: #2ecc71 !important; border-color: #2ecc71; box-shadow: 0 0 10px #2ecc71; }
+        .leave-btn { background: #c0392b !important; border-color: #e74c3c; }
 
-        /* MOBİL MENÜ RESPONSIVE */
-        @media (max-width: 768px) {
-            /* Toggle butonunu göster */
-            #mobile-menu-toggle { display: flex; }
-            
-            /* Butonları gizle ve menü haline getir */
-            #hidden-buttons-wrapper {
-                display: none; /* Varsayılan gizli */
-                position: absolute;
-                top: 50px; /* Toggle butonunun altı */
-                right: 0;
-                background: rgba(0,0,0,0.85);
-                padding: 10px 5px;
-                border-radius: 10px;
-                border: 1px solid #444;
-            }
-            /* Menü aktifken göster */
-            #hidden-buttons-wrapper.menu-open { display: flex; }
-            .menu-btn { width: 35px; height: 35px; font-size: 16px; } /* Mobilde biraz küçült */
-        }
-
+        /* GİRİŞ EKRANI */
+        .logo-text { font-size: 3rem; color: var(--gold); font-weight: bold; text-shadow: 0 4px 10px rgba(0,0,0,0.8); margin-bottom: 20px; }
+        .login-input { background: rgba(0, 0, 0, 0.4); border: 1px solid #2a5c35; padding: 15px; border-radius: 25px; color: white; text-align: center; font-size: 16px; width: 280px; margin-bottom: 15px; }
+        .btn-main { background: linear-gradient(180deg, #f1c40f 0%, #b7950b 100%); border: none; padding: 15px 50px; border-radius: 30px; color: #3e2723; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 15px; box-shadow: 0 5px 15px rgba(241, 196, 15, 0.2); }
 
         /* OYUN ALANI */
         #game-board { 
             display: grid; 
-            grid-template-columns: 80px 1fr 80px; /* Yan koltukları daralttım */
-            grid-template-rows: 100px 1fr 140px; /* Üst koltuğu daralttım */
+            grid-template-columns: 80px 1fr 80px; 
+            grid-template-rows: 100px 1fr 140px; 
             width: 100%; height: 100%; padding: 5px; box-sizing: border-box; 
         }
         
         .seat { display: flex; align-items: center; justify-content: center; position: relative; }
-        #seat-top { grid-column: 2; grid-row: 1; align-items: flex-start; padding-top: 5px; } /* Üste yasla */
-        #seat-left { grid-column: 1; grid-row: 2; justify-content: flex-start; padding-left: 5px; } /* Sola yasla */
-        #seat-right { grid-column: 3; grid-row: 2; justify-content: flex-end; padding-right: 5px; } /* Sağa yasla */
+        #seat-top { grid-column: 2; grid-row: 1; align-items: flex-start; padding-top: 10px; }
+        #seat-left { grid-column: 1; grid-row: 2; justify-content: flex-start; padding-left: 5px; }
+        #seat-right { grid-column: 3; grid-row: 2; justify-content: flex-end; padding-right: 5px; }
+        #seat-bottom { grid-column: 2; grid-row: 3; align-items: flex-end; padding-bottom: 10px; }
         
-        #seat-bottom { 
-            grid-column: 2; grid-row: 3; 
-            align-items: flex-end; 
-            padding-bottom: 10px;
-        }
-        #content-bottom {
-            display: flex;
-            flex-direction: row;
-            align-items: flex-end;
-            gap: 15px;
-        }
+        #content-bottom { display: flex; flex-direction: row; align-items: flex-end; gap: 15px; }
+        .seat-content { display: flex; flex-direction: column; align-items: center; }
 
-        .seat-content { display: flex; flex-direction: column; align-items: center; width: 100%; }
-
-        /* OYUNCU KUTUSU */
-        .player-box { width: 70px; height: 70px; background: #111; border: 2px solid #444; border-radius: 10px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; transition:0.2s;}
-        .player-box img { width: 100%; height: 100%; object-fit: cover; }
-        .player-name { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); font-size: 9px; text-align: center; padding: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .muted-icon { position: absolute; top: 2px; right: 2px; font-size: 14px; display: none; background: rgba(0,0,0,0.7); padding: 2px; border-radius: 50%; }
-        .turn-active { border-color: var(--gold); box-shadow: 0 0 15px var(--gold); }
+        /* ORTA ALAN (KARTLAR BURADA TOPLANACAK) */
+        #center-zone { grid-column: 2; grid-row: 2; display: flex; justify-content: center; align-items: center; position: relative; }
+        /* Kartların duracağı kutu (Hizalama için) */
+        #center-target { 
+            width: 100px; height: 140px; 
+            border: 2px dashed rgba(255,255,255,0.15); 
+            border-radius: 8px; 
+            position: relative; /* Kartlar içinde absolute olacak */
+        }
 
         /* KARTLAR */
         .my-card { width: 110px; margin-left: -60px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); cursor: pointer; transition: transform 0.2s; }
         .my-card:first-child { margin-left: 0; }
-        .my-card:hover { transform: translateY(-40px); margin-right: 15px; }
+        .my-card:hover { transform: translateY(-30px) scale(1.05); margin-right: 10px; z-index: 10; }
         
         .opponent-card { width: 40px; border-radius: 4px; border: 1px solid #aaa; margin-left: -25px; background: white; }
-        /* ORTA HEDEF ALANI */
-        #center-zone { grid-column: 2; grid-row: 2; display: flex; justify-content: center; align-items: center; position: relative; }
-        #center-target { width: 100px; height: 140px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 8px; display: flex; justify-content: center; align-items: center; }
         
-        .center-card { width: 100px; position: absolute; border-radius: 8px; box-shadow: 0 3px 8px rgba(0,0,0,0.5); transition: transform 0.2s; }
+        /* ORTADAKİ KARTLAR (DÜZGÜN İSTİFLEME) */
+        .center-card { 
+            width: 100px; 
+            position: absolute; /* Üst üste binmesi için */
+            top: 0; left: 0;
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5); 
+            /* JavaScript ile hafif rotate verilecek */
+        }
+        
         .flying-card { position: fixed; z-index: 9999; transition: transform 0.5s ease-out; pointer-events: none; width: 100px; margin:0!important; }
 
+        /* OYUNCU KUTUSU */
+        .player-box { width: 70px; height: 70px; background: #111; border: 2px solid #444; border-radius: 10px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; transition:0.2s;}
+        .player-box img { width: 100%; height: 100%; object-fit: cover; }
+        .player-name { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); font-size: 10px; text-align: center; padding: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mic-icon { position: absolute; top: 2px; right: 2px; font-size: 12px; display: none; background: rgba(0,0,0,0.6); border-radius: 50%; padding: 2px; }
+        .speaking { border-color: #2ecc71 !important; box-shadow: 0 0 10px #2ecc71; }
+        .turn-active { border-color: var(--gold); box-shadow: 0 0 15px var(--gold); }
+
         /* BOŞ KOLTUK */
-        .empty-seat { width: 60px; height: 60px; border: 2px dashed #777; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #aaa; font-size: 24px; }
+        .empty-seat { width: 60px; height: 60px; border: 2px dashed #777; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #aaa; font-size: 24px; transition: 0.2s; }
         .empty-seat:hover { border-color: var(--gold); color: var(--gold); background: rgba(255,255,255,0.1); }
 
         /* SKOR TABLOSU */
-        #scoreboard-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 150; display: none; align-items: center; justify-content: center; }
+        #scoreboard-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; display: none; align-items: center; justify-content: center; }
         .score-board { background: #222; border: 2px solid var(--gold); padding: 25px; border-radius: 15px; text-align: center; width: 280px; }
         .score-row { display: flex; justify-content: space-between; margin: 10px 0; border-bottom: 1px solid #444; padding: 5px; font-size: 18px; }
 
-        /* UI */
+        /* DİĞER MODALLAR */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; display: none; align-items: center; justify-content: center; }
-        .glass-panel { background: rgba(0,0,0,0.85); border: 1px solid #444; border-radius: 15px; padding: 20px; width: 90%; max-width: 400px; text-align: center; }
+        .glass-panel { background: var(--glass); border: 1px solid #444; border-radius: 15px; padding: 20px; width: 90%; max-width: 400px; text-align: center; }
         .btn-green { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; margin: 5px; }
         .btn-red { background: #c0392b; color: white; padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; margin: 5px; }
         
-        .legal-check { text-align: left; font-size: 13px; color: #aaa; width: 280px; margin-top: 15px; }
+        .legal-check { text-align: left; font-size: 13px; color: #aaa; width: 280px; margin-top: 10px; }
         .legal-check label { display: flex; align-items: center; margin-bottom: 5px; cursor: pointer; }
         .legal-check input { margin-right: 10px; accent-color: var(--gold); }
         .legal-link { color: var(--gold); text-decoration: underline; cursor: pointer; }
 
         canvas { display: none; }
 
-        /* MOBİL DÜZELTMELERİ (ScreenShot'a göre) */
+        /* MOBİL DÜZELTMELERİ */
         @media (max-width: 600px) {
             #game-board { grid-template-columns: 60px 1fr 60px; grid-template-rows: 80px 1fr 140px; padding: 2px; }
             .my-card { width: 90px; margin-left: -50px; }
             .center-card { width: 80px; }
+            #center-target { width: 80px; height: 110px; } /* Orta alanı küçült */
             .player-box { width: 55px; height: 55px; }
             .player-name { font-size: 8px; }
             .opponent-card { width: 30px; margin-left: -20px; }
             #content-bottom { gap: 10px; }
-            #seat-top { padding-top: 60px; } /* Üstteki menüden kaçmak için */
+            #seat-top { padding-top: 20px; }
         }
     </style>
 </head>
 <body>
-    <div id="left-exit-container">
-        <div id="game-ui" style="display:none;">
-            <button id="leave-btn" class="menu-btn" onclick="leave()">🚪</button>
-        </div>
-    </div>
 
-    <div id="right-menu-container">
-        <button id="mobile-menu-toggle" class="menu-btn" onclick="toggleMobileMenu()">☰</button>
-        
-        <div id="hidden-buttons-wrapper">
-            <button id="share-btn" class="menu-btn" onclick="copyLink()" style="display:none;">🔗</button>
+    <div id="menu-container">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <div id="hidden-menu">
+            <button id="share-btn" class="menu-btn" onclick="copyLink()" style="display:none; background:#3498db; border-color:#2980b9;">🔗</button>
             <button id="cam-btn" class="menu-btn" onclick="toggleCam()">📷</button>
             <button id="mic-btn" class="menu-btn" onclick="toggleMic()">🎤</button>
             <button id="fs-btn" class="menu-btn" onclick="toggleFS()">⛶</button>
+            <button id="leave-btn" class="menu-btn leave-btn" onclick="leave()" style="display:none;">🚪</button>
         </div>
     </div>
 
@@ -198,8 +166,8 @@
     </div>
 
     <div id="login-screen" class="screen active">
-        <h1 class="logo-text">♠ PİŞTİ PRO ♦</h1>
-        <p id="invite-msg" style="color:#3498db; display:none; margin-bottom:10px;">Masaya davetlisiniz!</p>
+        <div class="logo-text">♠ PİŞTİ PRO ♦</div>
+        <p id="invite-msg" style="color:#3498db; display:none; margin-bottom:10px;">Davetlisiniz!</p>
         <input type="text" id="username" class="login-input" placeholder="Oyuncu Adınızı Girin">
         <div class="legal-check">
             <label><input type="checkbox" id="chk-age"> 18 yaşından büyüğüm.</label>
@@ -268,19 +236,19 @@
             if(inviteCode) { document.getElementById('invite-msg').style.display='block'; }
         };
 
-        // --- MENÜ FONKSİYONU ---
-        function toggleMobileMenu() {
-            document.getElementById('hidden-buttons-wrapper').classList.toggle('menu-open');
+        // --- MENÜ ---
+        function toggleMenu() {
+            document.getElementById('menu-container').classList.toggle('menu-open');
         }
 
-        // --- TASARIM FONKSİYONLARI ---
+        // --- FONKSİYONLAR ---
         function getSrc(s,v) { return `/img/${{'♥':'hearts','♦':'diamonds','♣':'clubs','♠':'spades'}[s]}_${v}.png`; }
-        function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); toggleMobileMenu(); }
-        function copyLink() { navigator.clipboard.writeText(`${window.location.origin}/?oda=${curRoom}`).then(()=>alert("Link kopyalandı!")); toggleMobileMenu(); }
+        function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); toggleMenu(); }
+        function copyLink() { navigator.clipboard.writeText(`${window.location.origin}/?oda=${curRoom}`).then(()=>alert("Link kopyalandı!")); toggleMenu(); }
         function openTerms(t) { document.getElementById('terms-modal').style.display='flex'; }
         function closeModal() { document.getElementById('terms-modal').style.display='none'; }
 
-        // --- SES SİSTEMİ (BLOB YÖNTEMİ) ---
+        // --- SES (BLOB) ---
         function toggleMic() {
             if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
             if(audioCtx.state==='suspended') audioCtx.resume();
@@ -302,7 +270,7 @@
                 isMuted=true; document.getElementById('mic-btn').classList.remove('active-btn');
                 socket.emit("speaking", {roomId:curRoom, isSpeaking:false});
             }
-            toggleMobileMenu(); // Menüyü kapat
+            toggleMenu();
         }
 
         async function toggleCam() {
@@ -312,7 +280,6 @@
                     const tr = s.getVideoTracks()[0];
                     const capt = new ImageCapture(tr);
                     isCamOn = true; document.getElementById('cam-btn').classList.add('active-btn');
-                    
                     window.camInt = setInterval(async ()=>{
                         if(!isCamOn) return;
                         try {
@@ -322,7 +289,7 @@
                             ctx.drawImage(bmp,0,0,100,100);
                             const b64 = cvs.toDataURL('image/jpeg', 0.4);
                             socket.emit("streamData", {roomId:curRoom, type:'video', payload:b64});
-                            updCam('bottom', b64); // Kendi kameram
+                            updCam('bottom', b64);
                         } catch(e){}
                     }, 500);
                 } catch(e){ alert("Kamera hatası: "+e); }
@@ -332,7 +299,7 @@
                 socket.emit("streamData", {roomId:curRoom, type:'video', payload:null});
                 updCam('bottom', null);
             }
-            toggleMobileMenu(); // Menüyü kapat
+            toggleMenu();
         }
 
         socket.on("streamData", d => {
@@ -340,9 +307,7 @@
             if(d.type==='audio' && !isMuted) {
                 const blob = new Blob([d.payload], {type: 'audio/webm;codecs=opus'});
                 const audio = new Audio(URL.createObjectURL(blob));
-                audio.play().then(() => {
-                    setTimeout(() => URL.revokeObjectURL(audio.src), 1000); 
-                }).catch(e=>{});
+                audio.play().then(() => { setTimeout(() => URL.revokeObjectURL(audio.src), 1000); }).catch(e=>{});
             } else if(d.type==='video') {
                 if(!lastState) return;
                 let idx = parseInt(Object.keys(lastState.seats).find(k=>lastState.seats[k] && lastState.seats[k].id===d.id));
@@ -356,8 +321,8 @@
         }
         function toggleMute(id, pos) {
             if(id===socket.id) return;
-            if(mutedUsers.has(id)) { mutedUsers.delete(id); document.querySelector(`#content-${pos} .muted-icon`).style.display='none'; }
-            else { mutedUsers.add(id); document.querySelector(`#content-${pos} .muted-icon`).style.display='block'; }
+            if(mutedUsers.has(id)) { mutedUsers.delete(id); document.querySelector(`#content-${pos} .mic-icon`).style.display='none'; }
+            else { mutedUsers.add(id); document.querySelector(`#content-${pos} .mic-icon`).style.display='block'; document.querySelector(`#content-${pos} .mic-icon`).innerText='🔇'; }
         }
 
         // --- GİRİŞ VE OYUN ---
@@ -375,7 +340,12 @@
         function show(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function createRoom() { let r=document.getElementById('room-name').value; if(r){ socket.emit('createRoom', {roomId:r, username:myName}); document.getElementById('create-modal').style.display='none'; } }
         function join(id) { socket.emit('joinRoom', {roomId:id, username:myName}); }
-        function leave() { if(confirm("Çıkış?")) { socket.emit('leaveRoom'); location.href="/"; } }
+        function leave() { 
+            if(confirm("Çıkış?")) { 
+                socket.emit('leaveRoom'); location.href="/"; 
+            } 
+            toggleMenu();
+        }
         function sit(i) { socket.emit('sitDown', {roomId:curRoom, seatIndex:i, username:myName}); }
         function startGame() { socket.emit('startGame', curRoom); }
 
@@ -387,8 +357,9 @@
 
         socket.on('joined', d => {
             curRoom=d.roomId; myIdx=d.mySeat;
-            show('game-screen'); document.getElementById('game-ui').style.display='block';
+            show('game-screen'); 
             document.getElementById('share-btn').style.display='flex';
+            document.getElementById('leave-btn').style.display='flex';
             document.getElementById('admin-panel').style.display = d.isAdmin ? 'block' : 'none';
             window.history.pushState({path:`/?oda=${curRoom}`},'',`/?oda=${curRoom}`);
         });
@@ -412,7 +383,10 @@
             let c = document.getElementById('center-target'); c.innerHTML="";
             room.centerPile.forEach((card,i)=>{
                 let img=document.createElement('img'); img.src=getSrc(card.suit,card.value);
-                img.className='center-card'; img.style.transform=`rotate(${(i*10)%360}deg)`;
+                img.className='center-card'; 
+                // KARTLARI ÜST ÜSTE HAFİF AÇILI KOY
+                let rot = (i * 15) % 360; 
+                img.style.transform = `rotate(${rot}deg)`;
                 c.appendChild(img);
             });
         }
@@ -441,27 +415,23 @@
                 handHtml+=`</div>`;
             }
 
-            // KAMERA KUTUSU (SOLDA MI SAĞDA MI?)
-            // Alt taraf (benim) için kamera SOLDA, diğerleri için ÜSTTE
             let camBox = `
                 <div class="player-box ${turnClass}" onclick="toggleMute('${p.id}','${pos}')">
                     <img src="${avatar}" onerror="this.src='/img/user_placeholder.png'">
                     <div class="player-name">${p.name}</div>
-                    <div class="muted-icon">🔇</div>
+                    <div class="mic-icon">🔇</div>
                 </div>`;
             
             div.innerHTML = camBox + handHtml;
         }
 
         function play(el, i) {
-            // ORTAYA UÇUŞ (DÜZELTİLDİ: #center-target BAZ ALINDI)
             let cl = el.cloneNode(true); cl.classList.add('flying-card'); cl.classList.remove('my-card');
             let r = el.getBoundingClientRect(); 
             let c = document.getElementById('center-target').getBoundingClientRect();
             
             cl.style.left=r.left+'px'; cl.style.top=r.top+'px'; document.body.appendChild(cl);
             requestAnimationFrame(()=>{
-                // Tam merkeze git
                 let tx = c.left + (c.width/2) - (r.width/2);
                 let ty = c.top + (c.height/2) - (r.height/2);
                 cl.style.transform = `translate(${tx-r.left}px, ${ty-r.top}px) rotate(360deg)`;
@@ -476,7 +446,7 @@
             let idx = parseInt(Object.keys(lastState.seats).find(k=>lastState.seats[k] && lastState.seats[k].id===d.id));
             if(!isNaN(idx)) {
                 let el = document.querySelector(getPos(idx)==='bottom' ? `#content-bottom .player-box` : `#content-${getPos(idx)} .player-box`);
-                if(el) d.isSpeaking ? el.classList.add('mic-talking') : el.classList.remove('mic-talking');
+                if(el) d.isSpeaking ? el.classList.add('speaking') : el.classList.remove('speaking');
             }
         });
 
